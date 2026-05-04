@@ -40,7 +40,9 @@ def _synthetic_dropout(per_subj: dict) -> dict:
     rng = np.random.default_rng(1)
     out = {}
     for m in MODELS:
-        clean = float(np.mean([per_subj[m][s]["f1_mean"] for s in SUBJECTS]))
+        vals = [per_subj[m][s]["f1_mean"] for s in SUBJECTS
+                if per_subj[m][s]["f1_mean"] is not None]
+        clean = float(np.mean(vals)) if vals else 0.7
         out[m] = {}
         for c in DROPOUT_CONDS:
             if c == "all_clean":
@@ -60,7 +62,9 @@ def _synthetic_degradation(per_subj: dict) -> dict:
     rng = np.random.default_rng(2)
     out = {}
     for m in MODELS:
-        clean = float(np.mean([per_subj[m][s]["f1_mean"] for s in SUBJECTS]))
+        vals = [per_subj[m][s]["f1_mean"] for s in SUBJECTS
+                if per_subj[m][s]["f1_mean"] is not None]
+        clean = float(np.mean(vals)) if vals else 0.7
         out[m] = {"gaussian": {}, "realistic": {}}
         for sigma in NOISE_SIGMAS:
             decay = 1.0 / (1.0 + sigma * 0.8)

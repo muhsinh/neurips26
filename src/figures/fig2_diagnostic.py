@@ -24,16 +24,22 @@ def panel_A(ax, per_subj, overall, status):
     x_centers = np.arange(len(MODELS))
     jitter_w = 0.16
     for i, m in enumerate(MODELS):
-        means = [per_subj[m][s]["f1_mean"] for s in SUBJECTS]
-        stds = [per_subj[m][s]["f1_std"] for s in SUBJECTS]
+        pairs = [(s, per_subj[m][s]["f1_mean"], per_subj[m][s]["f1_std"])
+                 for s in SUBJECTS
+                 if per_subj[m][s]["f1_mean"] is not None]
+        if not pairs:
+            ax.text(x_centers[i], 0.5, "(no data)", ha="center", va="center",
+                    color=PALETTE[m], alpha=0.6, fontsize=9)
+            continue
+        means = np.array([p[1] for p in pairs])
+        stds = np.array([p[2] if p[2] is not None else 0.0 for p in pairs])
         xs = x_centers[i] + (rng.random(len(means)) - 0.5) * 2 * jitter_w
         for x, mu, sd in zip(xs, means, stds):
             ax.vlines(x, max(0, mu - sd), min(1, mu + sd),
                       color=PALETTE[m], alpha=0.45, lw=1.0)
         ax.scatter(xs, means, s=34, c=PALETTE[m], alpha=0.92,
                    edgecolor="white", linewidth=0.6, zorder=3)
-        # subject mean as horizontal tick
-        agg_mu = np.mean(means)
+        agg_mu = float(np.mean(means))
         ax.hlines(agg_mu, x_centers[i] - 0.30, x_centers[i] + 0.30,
                   color=PALETTE[m], lw=2.0, zorder=4)
 
@@ -50,14 +56,19 @@ def panel_A(ax, per_subj, overall, status):
     ax.set_ylim(-0.04, 1.05)
     ax.set_xlim(-0.6, len(MODELS) - 0.4)
 
-    # Annotate worst subject for first model
-    worst_subj = min(SUBJECTS, key=lambda s: per_subj[MODELS[0]][s]["f1_mean"])
-    worst_f1 = per_subj[MODELS[0]][worst_subj]["f1_mean"]
-    ax.annotate(f"{worst_subj} F1={worst_f1:.2f}",
-                xy=(0, worst_f1), xytext=(0.55, 0.20),
-                fontsize=7.5, color=PALETTE["annotation"],
-                arrowprops=dict(arrowstyle="-", color=PALETTE["annotation"],
-                                lw=0.5, connectionstyle="arc3,rad=-0.2"))
+    # Annotate worst subject for first model with real data
+    for m_idx, m in enumerate(MODELS):
+        valid = [(s, per_subj[m][s]["f1_mean"]) for s in SUBJECTS
+                 if per_subj[m][s]["f1_mean"] is not None]
+        if not valid:
+            continue
+        worst_subj, worst_f1 = min(valid, key=lambda p: p[1])
+        ax.annotate(f"{worst_subj} F1={worst_f1:.2f}",
+                    xy=(m_idx, worst_f1), xytext=(m_idx + 0.55, max(0.20, worst_f1 + 0.15)),
+                    fontsize=7.5, color=PALETTE["annotation"],
+                    arrowprops=dict(arrowstyle="-", color=PALETTE["annotation"],
+                                    lw=0.5, connectionstyle="arc3,rad=-0.2"))
+        break
 
 
 def panel_B(ax, exp2, status):

@@ -1,0 +1,26 @@
+{
+  "late_fusion_mlp": {
+    "f1_mean_over_subjects": 0.8099354338679505,
+    "f1_std_over_subjects": 0.2613815895594163,
+    "f1_min": 0.03508771929824561,
+    "f1_max": 1.0,
+    "n_collapsed_below_0.3": 1,
+    "n_subjects": 15
+  },
+  "cross_attention": {
+    "f1_mean_over_subjects": 0.7780979219630607,
+    "f1_std_over_subjects": 0.264854252666136,
+    "f1_min": 0.047619047619047616,
+    "f1_max": 1.0,
+    "n_collapsed_below_0.3": 1,
+    "n_subjects": 15
+  },
+  "scale_proxy": {
+    "f1_mean_over_subjects": 0.7221934656463754,
+    "f1_std_over_subjects": 0.3167451322180433,
+    "f1_min": 0.0,
+    "f1_max": 1.0,
+    "n_collapsed_below_0.3": 2,
+    "n_subjects": 15
+  }
+}

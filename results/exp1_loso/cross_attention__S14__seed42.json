@@ -1,0 +1,311 @@
+{
+  "model": "cross_attention",
+  "test_subject": "S14",
+  "seed": 42,
+  "git": "d84f187",
+  "params_total": 110018,
+  "params_trainable": 110018,
+  "epochs_trained": 22,
+  "train_loss_history": [
+    {
+      "epoch": 0,
+      "loss_mean": 0.2655445886775851
+    },
+    {
+      "epoch": 1,
+      "loss_mean": 0.14957985281944275
+    },
+    {
+      "epoch": 2,
+      "loss_mean": 0.1398620791733265
+    },
+    {
+      "epoch": 3,
+      "loss_mean": 0.12501368299126625
+    },
+    {
+      "epoch": 4,
+      "loss_mean": 0.1025864533148706
+    },
+    {
+      "epoch": 5,
+      "loss_mean": 0.08712267596274614
+    },
+    {
+      "epoch": 6,
+      "loss_mean": 0.0786336725577712
+    },
+    {
+      "epoch": 7,
+      "loss_mean": 0.05907062813639641
+    },
+    {
+      "epoch": 8,
+      "loss_mean": 0.05129155411850661
+    },
+    {
+      "epoch": 9,
+      "loss_mean": 0.048032573191449046
+    },
+    {
+      "epoch": 10,
+      "loss_mean": 0.03722245857352391
+    },
+    {
+      "epoch": 11,
+      "loss_mean": 0.05681729124626145
+    },
+    {
+      "epoch": 12,
+      "loss_mean": 0.06276199105195701
+    },
+    {
+      "epoch": 13,
+      "loss_mean": 0.033396233222447336
+    },
+    {
+      "epoch": 14,
+      "loss_mean": 0.01865377911599353
+    },
+    {
+      "epoch": 15,
+      "loss_mean": 0.008286581432912499
+    },
+    {
+      "epoch": 16,
+      "loss_mean": 0.005203918582992628
+    },
+    {
+      "epoch": 17,
+      "loss_mean": 0.005945750948740169
+    },
+    {
+      "epoch": 18,
+      "loss_mean": 0.018828949134331197
+    },
+    {
+      "epoch": 19,
+      "loss_mean": 0.020313095301389694
+    },
+    {
+      "epoch": 20,
+      "loss_mean": 0.025963621970731765
+    },
+    {
+      "epoch": 21,
+      "loss_mean": 0.03249661838344764
+    }
+  ],
+  "train_time_sec": 6.880772113800049,
+  "test_metrics": {
+    "f1_stress": 0.48,
+    "f1_macro": 0.6017021276595744,
+    "acc": 0.6388888888888888,
+    "n": 36,
+    "n_stress": 11,
+    "confusion": [
+      [
+        17,
+        8
+      ],
+      [
+        5,
+        6
+      ]
+    ],
+    "y_true": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "y_pred": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  "majority_baseline": {
+    "f1": 0.0,
+    "acc": 0.6944444444444444,
+    "pred_class": 0
+  },
+  "config": {
+    "seed": 42,
+    "seeds": [
+      42,
+      1337,
+      2024
+    ],
+    "dataset": {
+      "name": "WESAD",
+      "raw_dir": "data/raw/WESAD",
+      "processed_dir": "data/processed",
+      "subjects": [
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10",
+        "S11",
+        "S13",
+        "S14",
+        "S15",
+        "S16",
+        "S17"
+      ],
+      "sample_rate_hz": 4,
+      "window_seconds": 60,
+      "modalities": [
+        "ACC",
+        "BVP",
+        "EDA",
+        "TEMP"
+      ],
+      "label_map": {
+        "stress": [
+          2
+        ],
+        "non_stress": [
+          1,
+          3
+        ]
+      },
+      "drop_labels": [
+        0,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "train": {
+      "batch_size": 64,
+      "lr": 0.001,
+      "weight_decay": 0.0001,
+      "max_epochs": 30,
+      "patience": 5,
+      "device": "auto"
+    },
+    "models": {
+      "late_fusion_mlp": {
+        "hidden_per_mod": 64,
+        "fusion_hidden": 64,
+        "dropout": 0.3
+      },
+      "cross_attention": {
+        "feature_dim": 64,
+        "n_heads": 4,
+        "n_layers": 2,
+        "dropout": 0.1
+      },
+      "scale_proxy": {
+        "feature_dim": 256,
+        "n_layers": 4,
+        "n_heads": 8,
+        "dropout": 0.1,
+        "freeze_encoder": true
+      }
+    },
+    "experiments": {
+      "dropout_conditions": [
+        "all_clean",
+        "drop_ACC",
+        "drop_BVP",
+        "drop_EDA",
+        "drop_TEMP",
+        "drop_ACC_BVP",
+        "drop_ACC_EDA",
+        "drop_ACC_TEMP",
+        "drop_BVP_EDA",
+        "drop_BVP_TEMP",
+        "drop_EDA_TEMP"
+      ],
+      "noise_sigmas": [
+        0.1,
+        0.5,
+        1.0,
+        2.0
+      ],
+      "realistic_corruptions": [
+        "acc_motion",
+        "eda_drift",
+        "bvp_dropout"
+      ]
+    },
+    "paths": {
+      "results_root": "results",
+      "figures_root": "figures",
+      "logs_root": "logs"
+    }
+  }
+}
