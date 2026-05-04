@@ -102,35 +102,36 @@ def panel_B(ax, exp2, status):
     worst_drop = drops[worst_c]
     worst_idx = DROPOUT_CONDS.index(worst_c)
     cond_label = worst_c.replace("drop_", "").replace("_", "+")
+    bar_y_low = min(exp2[m][worst_c]["f1_mean"] for m in MODELS)
     ax.annotate(f"−{worst_drop*100:.0f} pp F1\n(drop {cond_label})",
-                xy=(worst_idx, 0.20), xytext=(worst_idx - 0.3, 0.75),
-                fontsize=7.5, color=PALETTE["stress"],
-                ha="center",
-                arrowprops=dict(arrowstyle="->", color=PALETTE["stress"], lw=0.7))
+                xy=(worst_idx, bar_y_low + 0.04),
+                xytext=(max(0.5, worst_idx - 2.5), 0.78),
+                fontsize=7.5, color=PALETTE["stress"], fontweight="bold",
+                ha="left",
+                arrowprops=dict(arrowstyle="->", color=PALETTE["stress"], lw=0.7,
+                                connectionstyle="arc3,rad=-0.15"))
 
 
 def panel_C(ax, exp3, status):
-    sigmas = [0.0] + NOISE_SIGMAS
+    sigmas = NOISE_SIGMAS
     for m in MODELS:
-        clean_f1 = np.nan
-        # attempt to use exp1 baseline if available; else use sigma=0.1 as proxy
-        means = [exp3[m]["gaussian"][str(NOISE_SIGMAS[0])]["f1_mean"]] + \
-                [exp3[m]["gaussian"][str(s)]["f1_mean"] for s in NOISE_SIGMAS]
-        # use first as ~clean reference
-        stds = [exp3[m]["gaussian"][str(NOISE_SIGMAS[0])]["f1_std"]] + \
-               [exp3[m]["gaussian"][str(s)]["f1_std"] for s in NOISE_SIGMAS]
-        means = np.array(means); stds = np.array(stds)
-        ax.plot(sigmas, means, "-o", color=PALETTE[m], lw=1.4, ms=4,
-                mec="white", mew=0.5, label=MODEL_LABELS[m])
+        means = np.array([exp3[m]["gaussian"][str(s)]["f1_mean"] for s in sigmas])
+        stds = np.array([exp3[m]["gaussian"][str(s)]["f1_std"] for s in sigmas])
+        ax.plot(sigmas, means, "-o", color=PALETTE[m], lw=1.5, ms=5,
+                mec="white", mew=0.6, label=MODEL_LABELS[m])
         ax.fill_between(sigmas, np.clip(means - stds, 0, 1),
                         np.clip(means + stds, 0, 1),
                         color=PALETTE[m], alpha=0.15)
     ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.8, alpha=0.5)
+    ax.text(sigmas[-1], 0.31, "collapse 0.3",
+            fontsize=7, color=PALETTE["stress"], ha="right", va="bottom")
     ax.set_xlabel("Gaussian noise σ (× input std)")
     ax.set_ylabel("F1 (stress)")
-    ax.set_xscale("symlog", linthresh=0.05)
+    ax.set_xscale("log")
+    ax.set_xticks(sigmas)
+    ax.set_xticklabels([f"{s:g}" for s in sigmas])
     ax.set_ylim(0, 1.0)
-    ax.legend(loc="upper right", frameon=False, fontsize=7)
+    ax.legend(loc="lower left", frameon=False, fontsize=7)
 
 
 def render(out_path: Path) -> None:

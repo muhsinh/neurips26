@@ -1,0 +1,265 @@
+{
+  "model": "cross_modal_recon",
+  "test_subject": "S11",
+  "seed": 42,
+  "git": "699b7a3",
+  "params_total": 114178,
+  "params_trainable": 114178,
+  "epochs_trained": 11,
+  "train_loss_history": [
+    {
+      "epoch": 0,
+      "loss_mean": 0.30011742003262043
+    },
+    {
+      "epoch": 1,
+      "loss_mean": 0.27120097167789936
+    },
+    {
+      "epoch": 2,
+      "loss_mean": 0.19596810336224735
+    },
+    {
+      "epoch": 3,
+      "loss_mean": 0.23776424722746015
+    },
+    {
+      "epoch": 4,
+      "loss_mean": 0.18095899373292923
+    },
+    {
+      "epoch": 5,
+      "loss_mean": 0.15263191051781178
+    },
+    {
+      "epoch": 6,
+      "loss_mean": 0.25457584392279387
+    },
+    {
+      "epoch": 7,
+      "loss_mean": 0.2266761204227805
+    },
+    {
+      "epoch": 8,
+      "loss_mean": 0.19398155948147178
+    },
+    {
+      "epoch": 9,
+      "loss_mean": 0.17857306404039264
+    },
+    {
+      "epoch": 10,
+      "loss_mean": 0.24344366788864136
+    }
+  ],
+  "train_time_sec": 3.3310999870300293,
+  "test_metrics": {
+    "f1_stress": 0.5333333333333333,
+    "f1_macro": 0.703030303030303,
+    "acc": 0.8,
+    "n": 35,
+    "n_stress": 11,
+    "confusion": [
+      [
+        24,
+        0
+      ],
+      [
+        7,
+        4
+      ]
+    ],
+    "y_true": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "y_pred": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "majority_baseline": {
+    "f1": 0.0,
+    "acc": 0.6857142857142857,
+    "pred_class": 0
+  },
+  "config": {
+    "seed": 42,
+    "seeds": [
+      42,
+      1337,
+      2024
+    ],
+    "dataset": {
+      "name": "WESAD",
+      "raw_dir": "data/raw/WESAD",
+      "processed_dir": "data/processed",
+      "subjects": [
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10",
+        "S11",
+        "S13",
+        "S14",
+        "S15",
+        "S16",
+        "S17"
+      ],
+      "sample_rate_hz": 4,
+      "window_seconds": 60,
+      "modalities": [
+        "ACC",
+        "BVP",
+        "EDA",
+        "TEMP"
+      ],
+      "label_map": {
+        "stress": [
+          2
+        ],
+        "non_stress": [
+          1,
+          3
+        ]
+      },
+      "drop_labels": [
+        0,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "train": {
+      "batch_size": 64,
+      "lr": 0.001,
+      "weight_decay": 0.0001,
+      "max_epochs": 30,
+      "patience": 5,
+      "device": "auto"
+    },
+    "models": {
+      "late_fusion_mlp": {
+        "hidden_per_mod": 64,
+        "fusion_hidden": 64,
+        "dropout": 0.3
+      },
+      "cross_attention": {
+        "feature_dim": 64,
+        "n_heads": 4,
+        "n_layers": 2,
+        "dropout": 0.1
+      },
+      "scale_proxy": {
+        "feature_dim": 128,
+        "n_layers": 3,
+        "n_heads": 4,
+        "dropout": 0.1,
+        "freeze_encoder": true
+      }
+    },
+    "experiments": {
+      "dropout_conditions": [
+        "all_clean",
+        "drop_ACC",
+        "drop_BVP",
+        "drop_EDA",
+        "drop_TEMP",
+        "drop_ACC_BVP",
+        "drop_ACC_EDA",
+        "drop_ACC_TEMP",
+        "drop_BVP_EDA",
+        "drop_BVP_TEMP",
+        "drop_EDA_TEMP"
+      ],
+      "noise_sigmas": [
+        0.1,
+        0.5,
+        1.0,
+        2.0
+      ],
+      "realistic_corruptions": [
+        "acc_motion",
+        "eda_drift",
+        "bvp_dropout"
+      ]
+    },
+    "paths": {
+      "results_root": "results",
+      "figures_root": "figures",
+      "logs_root": "logs"
+    }
+  }
+}

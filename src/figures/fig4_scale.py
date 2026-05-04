@@ -58,21 +58,28 @@ def panel_mid(ax, exp2):
     ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.7, alpha=0.4)
 
 
-def panel_bot(ax, exp3):
+def panel_bot(ax, exp3, per_subj):
+    """Panel C: relative F1 drop from clean to high-noise.
+    Negative values = robust; positive = degraded.
+    """
     x_centers = np.arange(len(MODELS))
     high_sigma = max(NOISE_SIGMAS)
-    means, stds = [], []
+    drops, stds = [], []
     for m in MODELS:
+        clean_subj = [per_subj[m][s]["f1_mean"] for s in SUBJECTS
+                      if per_subj[m][s]["f1_mean"] is not None]
+        clean = float(np.mean(clean_subj))
         d = exp3[m]["gaussian"][str(high_sigma)]
-        means.append(d["f1_mean"]); stds.append(d["f1_std"])
-    ax.bar(x_centers, means, yerr=stds, capsize=2,
+        drops.append(clean - d["f1_mean"])
+        stds.append(d["f1_std"])
+    ax.bar(x_centers, drops, yerr=stds, capsize=2,
            color=[PALETTE[m] for m in MODELS],
            edgecolor="white", linewidth=0.5)
+    ax.axhline(0, color=PALETTE["baseline"], lw=0.6)
     ax.set_xticks(x_centers)
     ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], fontsize=8)
-    ax.set_ylabel(f"F1 (σ={high_sigma:g} noise)")
-    ax.set_ylim(0, 1.0)
-    ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.7, alpha=0.4)
+    ax.set_ylabel(f"F1 drop, clean to σ={high_sigma:g}")
+    ax.set_ylim(-0.05, 0.5)
 
 
 def render(out_path: Path) -> None:
@@ -99,9 +106,10 @@ def render(out_path: Path) -> None:
              color=PALETTE["annotation"], va="top")
 
     axB = fig.add_subplot(gs[2])
-    panel_bot(axB, exp3); panel_label(axB, "C", x=-0.16, y=1.04)
-    axB.text(0.02, 0.96, "Noise brittleness persists",
-             transform=axB.transAxes, fontsize=8.5, fontweight="bold",
+    panel_bot(axB, exp3, per_subj); panel_label(axB, "C", x=-0.16, y=1.04)
+    axB.text(0.02, 0.96, "Noise brittleness: late-fusion + cross-attn collapse;\n"
+             "scale-proxy's 'robustness' is frozen-encoder saturation",
+             transform=axB.transAxes, fontsize=8.0, fontweight="bold",
              color=PALETTE["annotation"], va="top")
 
     flag = ""
