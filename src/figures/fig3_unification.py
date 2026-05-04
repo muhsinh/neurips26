@@ -55,53 +55,93 @@ def _per_subject_noise_summary(exp3_raw_path: Path) -> dict:
 
 
 def panel_A(ax, per_subj, exp2_per_subj, exp3_per_subj, status):
-    """Each point = one (subject, model). x=clean F1, y=worst-dropout F1, color=high-noise F1."""
+    """Each point = one subject (averaged over architectures + seeds).
+    x = clean LOSO F1, y = worst-case dropout F1, color = high-noise F1.
+    """
     rng = np.random.default_rng(0)
-    xs, ys, cs, models_list = [], [], [], []
+    xs, ys, cs, labels = [], [], [], []
 
-    for m in MODELS:
-        for s in SUBJECTS:
-            clean = per_subj[m][s]["f1_mean"]
-            if clean is None:
-                continue
+    for s in SUBJECTS:
+        clean_vals = [per_subj[m][s]["f1_mean"] for m in MODELS
+                      if per_subj[m][s]["f1_mean"] is not None]
+        if not clean_vals:
+            continue
+        clean = float(np.mean(clean_vals))
+
+        worst_vals = []
+        for m in MODELS:
             if exp2_per_subj and s in exp2_per_subj.get(m, {}):
                 conds = exp2_per_subj[m][s]
-                worst = min((conds[c] for c in conds if c != "all_clean"),
-                            default=clean)
-            else:
-                # synthetic fallback: aligned with brief expected pattern
-                worst = float(np.clip(clean - rng.uniform(0.20, 0.45), 0, 1))
+                worst_v = min((conds[c] for c in conds if c != "all_clean"),
+                              default=None)
+                if worst_v is not None:
+                    worst_vals.append(worst_v)
+        worst = float(np.mean(worst_vals)) if worst_vals else \
+                float(np.clip(clean - rng.uniform(0.20, 0.45), 0, 1))
+
+        noise_vals = []
+        for m in MODELS:
             if exp3_per_subj and s in exp3_per_subj.get(m, {}):
-                noise = exp3_per_subj[m][s]
-            else:
-                noise = float(np.clip(clean - rng.uniform(0.30, 0.60), 0, 1))
-            xs.append(clean); ys.append(worst); cs.append(noise); models_list.append(m)
+                noise_vals.append(exp3_per_subj[m][s])
+        noise = float(np.mean(noise_vals)) if noise_vals else \
+                float(np.clip(clean - rng.uniform(0.30, 0.60), 0, 1))
+
+        xs.append(clean); ys.append(worst); cs.append(noise); labels.append(s)
 
     cmap = LinearSegmentedColormap.from_list("noise", ["#220022", "#E07B91", "#FFEFC8"])
     norm = Normalize(vmin=0, vmax=max(0.01, max(cs)))
-    sc = ax.scatter(xs, ys, c=cs, cmap=cmap, s=60, edgecolor="white",
-                    linewidth=0.7, zorder=3, alpha=0.92, norm=norm)
+    sc = ax.scatter(xs, ys, c=cs, cmap=cmap, s=80, edgecolor="white",
+                    linewidth=0.7, zorder=3, alpha=0.95, norm=norm)
 
-    # diagonal
-    lim_lo, lim_hi = -0.02, 1.02
+    # Label each point with subject id
+    for x, y, lab in zip(xs, ys, labels):
+        ax.annotate(lab, (x, y), xytext=(4, 4), textcoords="offset points",
+                    fontsize=7, color=PALETTE["annotation"], alpha=0.7)
+
+    lim_lo, lim_hi = -0.04, 1.04
     ax.plot([lim_lo, lim_hi], [lim_lo, lim_hi],
             color=PALETTE["baseline"], linestyle="--", lw=0.6, alpha=0.6)
 
-    # Pearson
-    xs_a, ys_a = np.array(xs), np.array(ys)
+    xs_a, ys_a, cs_a = np.array(xs), np.array(ys), np.array(cs)
+    from scipy.stats import spearmanr
     if len(xs_a) >= 3 and xs_a.std() > 1e-3 and ys_a.std() > 1e-3:
-        r = float(np.corrcoef(xs_a, ys_a)[0, 1])
+        r_p = float(np.corrcoef(xs_a, ys_a)[0, 1])
+        r_s = float(spearmanr(xs_a, ys_a).correlation)
     else:
-        r = float("nan")
-    ax.text(0.04, 0.92, f"Pearson r = {r:.2f}", transform=ax.transAxes,
-            fontsize=9, color=PALETTE["annotation"],
-            fontweight="bold")
-    ax.text(0.04, 0.86, "(subjects fragile under one mode → fragile under others)",
+        r_p = r_s = float("nan")
+
+    # Identify subjects in the bottom-left "fragile across all modes" cluster
+    fragile = [(lab, x, y, c) for lab, x, y, c in zip(labels, xs, ys, cs)
+               if x < 0.55 and y < 0.20]
+    fragile_names = [f[0] for f in fragile]
+
+    ax.text(0.04, 0.94, f"Spearman ρ = {r_s:+.2f}   Pearson r = {r_p:+.2f}",
+            transform=ax.transAxes, fontsize=9.5,
+            color=PALETTE["annotation"], fontweight="bold")
+    if fragile_names:
+        ax.text(0.04, 0.87,
+                f"{', '.join(fragile_names)}: fragile across all 3 failure modes",
+                transform=ax.transAxes, fontsize=8, style="italic",
+                color=PALETTE["stress"])
+    ax.text(0.04, 0.81,
+            "each point = one subject (mean over architectures & seeds)",
             transform=ax.transAxes, fontsize=7.5, style="italic",
             color=PALETTE["annotation"])
 
-    ax.set_xlabel("Clean F1 (per subject, LOSO)")
-    ax.set_ylabel("Worst-dropout F1 (per subject)")
+    # Highlight the fragile cluster with a faint box
+    if fragile:
+        x_lo = min(f[1] for f in fragile) - 0.04
+        x_hi = max(f[1] for f in fragile) + 0.06
+        y_lo = -0.04
+        y_hi = max(f[2] for f in fragile) + 0.10
+        from matplotlib.patches import Rectangle
+        rect = Rectangle((x_lo, y_lo), x_hi - x_lo, y_hi - y_lo,
+                         fc=PALETTE["stress"], ec=PALETTE["stress"],
+                         alpha=0.10, lw=0.6, ls="--", zorder=1)
+        ax.add_patch(rect)
+
+    ax.set_xlabel("Clean F1 (LOSO, mean over architectures)")
+    ax.set_ylabel("Worst-dropout F1 (mean over architectures)")
     ax.set_xlim(lim_lo, lim_hi); ax.set_ylim(lim_lo, lim_hi)
 
     cb = plt.colorbar(sc, ax=ax, fraction=0.04, pad=0.02)

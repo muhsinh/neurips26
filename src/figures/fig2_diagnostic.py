@@ -73,7 +73,6 @@ def panel_A(ax, per_subj, overall, status):
 
 def panel_B(ax, exp2, status):
     width = 0.25
-    n_models = len(MODELS)
     n_conds = len(DROPOUT_CONDS)
     x = np.arange(n_conds)
     for i, m in enumerate(MODELS):
@@ -89,23 +88,24 @@ def panel_B(ax, exp2, status):
     ax.set_xticklabels(short_labels, rotation=45, ha="right", fontsize=7)
     ax.set_ylabel("F1 (stress)")
     ax.set_ylim(0, 1.0)
-    ax.legend(loc="upper right", frameon=False, ncol=1, fontsize=7)
+    ax.legend(loc="upper left", frameon=False, ncol=3, fontsize=7,
+              bbox_to_anchor=(0.0, 1.13))
 
-    # Find biggest single-modality drop and annotate
+    # Find biggest drop and annotate near where the bars actually live
     cmean_clean = np.mean([exp2[m]["all_clean"]["f1_mean"] for m in MODELS])
     drops = {}
     for c in DROPOUT_CONDS:
         if c == "all_clean":
             continue
-        drop = cmean_clean - np.mean([exp2[m][c]["f1_mean"] for m in MODELS])
-        drops[c] = drop
+        drops[c] = cmean_clean - np.mean([exp2[m][c]["f1_mean"] for m in MODELS])
     worst_c = max(drops, key=drops.get)
     worst_drop = drops[worst_c]
     worst_idx = DROPOUT_CONDS.index(worst_c)
-    bar_y = exp2[MODELS[1]][worst_c]["f1_mean"]
-    ax.annotate(f"shortcut: −{worst_drop:.2f} F1\nwhen {worst_c.replace('drop_','')} dropped",
-                xy=(worst_idx, bar_y), xytext=(worst_idx - 1.5, 0.85),
-                fontsize=7, color=PALETTE["stress"],
+    cond_label = worst_c.replace("drop_", "").replace("_", "+")
+    ax.annotate(f"−{worst_drop*100:.0f} pp F1\n(drop {cond_label})",
+                xy=(worst_idx, 0.20), xytext=(worst_idx - 0.3, 0.75),
+                fontsize=7.5, color=PALETTE["stress"],
+                ha="center",
                 arrowprops=dict(arrowstyle="->", color=PALETTE["stress"], lw=0.7))
 
 

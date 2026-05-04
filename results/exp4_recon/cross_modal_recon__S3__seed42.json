@@ -1,0 +1,297 @@
+{
+  "model": "cross_modal_recon",
+  "test_subject": "S3",
+  "seed": 42,
+  "git": "cbc1452",
+  "params_total": 114178,
+  "params_trainable": 114178,
+  "epochs_trained": 20,
+  "train_loss_history": [
+    {
+      "epoch": 0,
+      "loss_mean": 0.3265667073428631
+    },
+    {
+      "epoch": 1,
+      "loss_mean": 0.2642720639705658
+    },
+    {
+      "epoch": 2,
+      "loss_mean": 0.2721240920946002
+    },
+    {
+      "epoch": 3,
+      "loss_mean": 0.17945456225425005
+    },
+    {
+      "epoch": 4,
+      "loss_mean": 0.1765276426449418
+    },
+    {
+      "epoch": 5,
+      "loss_mean": 0.25226592645049095
+    },
+    {
+      "epoch": 6,
+      "loss_mean": 0.16820126120001078
+    },
+    {
+      "epoch": 7,
+      "loss_mean": 0.15965831698849797
+    },
+    {
+      "epoch": 8,
+      "loss_mean": 0.165918143466115
+    },
+    {
+      "epoch": 9,
+      "loss_mean": 0.12937189731746912
+    },
+    {
+      "epoch": 10,
+      "loss_mean": 0.12083778297528625
+    },
+    {
+      "epoch": 11,
+      "loss_mean": 0.1664249747991562
+    },
+    {
+      "epoch": 12,
+      "loss_mean": 0.12305256444960833
+    },
+    {
+      "epoch": 13,
+      "loss_mean": 0.0738789679016918
+    },
+    {
+      "epoch": 14,
+      "loss_mean": 0.04551336105214432
+    },
+    {
+      "epoch": 15,
+      "loss_mean": 0.07991831249091774
+    },
+    {
+      "epoch": 16,
+      "loss_mean": 0.10069179045967758
+    },
+    {
+      "epoch": 17,
+      "loss_mean": 0.10533664154354483
+    },
+    {
+      "epoch": 18,
+      "loss_mean": 0.16063858405686915
+    },
+    {
+      "epoch": 19,
+      "loss_mean": 0.09951162058860064
+    }
+  ],
+  "train_time_sec": 9.919672012329102,
+  "test_metrics": {
+    "f1_stress": 0.47058823529411764,
+    "f1_macro": 0.6434573829531813,
+    "acc": 0.7272727272727273,
+    "n": 33,
+    "n_stress": 10,
+    "confusion": [
+      [
+        20,
+        3
+      ],
+      [
+        6,
+        4
+      ]
+    ],
+    "y_true": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "y_pred": [
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "majority_baseline": {
+    "f1": 0.0,
+    "acc": 0.696969696969697,
+    "pred_class": 0
+  },
+  "config": {
+    "seed": 42,
+    "seeds": [
+      42,
+      1337,
+      2024
+    ],
+    "dataset": {
+      "name": "WESAD",
+      "raw_dir": "data/raw/WESAD",
+      "processed_dir": "data/processed",
+      "subjects": [
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8",
+        "S9",
+        "S10",
+        "S11",
+        "S13",
+        "S14",
+        "S15",
+        "S16",
+        "S17"
+      ],
+      "sample_rate_hz": 4,
+      "window_seconds": 60,
+      "modalities": [
+        "ACC",
+        "BVP",
+        "EDA",
+        "TEMP"
+      ],
+      "label_map": {
+        "stress": [
+          2
+        ],
+        "non_stress": [
+          1,
+          3
+        ]
+      },
+      "drop_labels": [
+        0,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "train": {
+      "batch_size": 64,
+      "lr": 0.001,
+      "weight_decay": 0.0001,
+      "max_epochs": 30,
+      "patience": 5,
+      "device": "auto"
+    },
+    "models": {
+      "late_fusion_mlp": {
+        "hidden_per_mod": 64,
+        "fusion_hidden": 64,
+        "dropout": 0.3
+      },
+      "cross_attention": {
+        "feature_dim": 64,
+        "n_heads": 4,
+        "n_layers": 2,
+        "dropout": 0.1
+      },
+      "scale_proxy": {
+        "feature_dim": 128,
+        "n_layers": 3,
+        "n_heads": 4,
+        "dropout": 0.1,
+        "freeze_encoder": true
+      }
+    },
+    "experiments": {
+      "dropout_conditions": [
+        "all_clean",
+        "drop_ACC",
+        "drop_BVP",
+        "drop_EDA",
+        "drop_TEMP",
+        "drop_ACC_BVP",
+        "drop_ACC_EDA",
+        "drop_ACC_TEMP",
+        "drop_BVP_EDA",
+        "drop_BVP_TEMP",
+        "drop_EDA_TEMP"
+      ],
+      "noise_sigmas": [
+        0.1,
+        0.5,
+        1.0,
+        2.0
+      ],
+      "realistic_corruptions": [
+        "acc_motion",
+        "eda_drift",
+        "bvp_dropout"
+      ]
+    },
+    "paths": {
+      "results_root": "results",
+      "figures_root": "figures",
+      "logs_root": "logs"
+    }
+  }
+}
