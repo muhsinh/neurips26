@@ -1,0 +1,23 @@
+{
+  "d06_threshold_pp": 3.0,
+  "checks": [
+    {
+      "test": "worst-case dropout",
+      "condition": "drop_BVP_EDA",
+      "ref_f1": 0.27795335665773463,
+      "recon_f1": 0.2841623497591102,
+      "delta_pp": 0.6208993101375571,
+      "std_pp": 32.2919536504408,
+      "passes": false
+    },
+    {
+      "test": "high-noise \u03c3=2.0",
+      "ref_f1": 0.4443869990216622,
+      "recon_f1": 0.4794232538724601,
+      "delta_pp": 3.503625485079792,
+      "std_pp": 8.988435325496392,
+      "passes": false
+    }
+  ],
+  "include": false
+}
