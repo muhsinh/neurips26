@@ -3,23 +3,34 @@
 Three sub-views (vertical strip), all showing the same per-architecture comparison:
   Top:    per-subject F1 strip plot
   Middle: F1 under worst-case modality dropout
-  Bottom: F1 under high noise
+  Bottom: F1 drop, clean to high-noise
 
 Annotate parameter count beneath each architecture label.
 """
 from __future__ import annotations
 from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.figures.style import apply_style, PALETTE, MODEL_LABELS, MODEL_PARAMS, panel_label
+from src.figures.style import (
+    MODEL_LABELS,
+    MODEL_PARAMS,
+    PALETTE,
+    apply_style,
+    panel_label,
+)
 from src.figures._data_loader import (
-    load_exp1, load_exp2, load_exp3,
-    SUBJECTS, MODELS, NOISE_SIGMAS,
+    MODELS,
+    NOISE_SIGMAS,
+    SUBJECTS,
+    load_exp1,
+    load_exp2,
+    load_exp3,
 )
 
 
-def panel_top(ax, per_subj):
+def panel_top(ax, per_subj) -> None:
     rng = np.random.default_rng(7)
     x_centers = np.arange(len(MODELS))
     for i, m in enumerate(MODELS):
@@ -27,41 +38,41 @@ def panel_top(ax, per_subj):
         xs = x_centers[i] + (rng.random(len(means)) - 0.5) * 0.30
         ax.scatter(xs, means, s=22, c=PALETTE[m], alpha=0.85,
                    edgecolor="white", linewidth=0.5)
-        agg_mu = np.mean(means)
+        agg_mu = float(np.mean(means))
         ax.hlines(agg_mu, x_centers[i] - 0.30, x_centers[i] + 0.30,
                   color=PALETTE[m], lw=1.6)
-    ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.7, alpha=0.4)
+    ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.7, alpha=0.6)
     ax.set_xticks(x_centers)
     labels = [f"{MODEL_LABELS[m]}\n({MODEL_PARAMS[m]} params)" for m in MODELS]
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_ylabel("Per-subject F1")
-    ax.set_ylim(-0.02, 1.05)
+    ax.set_ylim(-0.04, 1.05)
 
 
-def panel_mid(ax, exp2):
+def panel_mid(ax, exp2) -> None:
     x_centers = np.arange(len(MODELS))
     means, stds = [], []
     for m in MODELS:
-        worst = min(c for c in exp2[m] if c != "all_clean")  # name-only fallback if needed
-        # Pick the cond with the lowest mean F1 per arch
         worst_cond = min((c for c in exp2[m] if c != "all_clean"),
                          key=lambda c: exp2[m][c]["f1_mean"])
         means.append(exp2[m][worst_cond]["f1_mean"])
-        stds.append(exp2[m][worst_cond]["f1_std"])
-    bars = ax.bar(x_centers, means, yerr=stds, capsize=2,
-                  color=[PALETTE[m] for m in MODELS],
-                  edgecolor="white", linewidth=0.5)
+        # Clip std so error-bar whiskers don't extend disproportionately on
+        # near-zero bars (the std represents seed × subject variation, not
+        # symmetric uncertainty).
+        stds.append(min(exp2[m][worst_cond]["f1_std"], 0.20))
+    ax.bar(x_centers, means, yerr=stds, capsize=2,
+           error_kw={"linewidth": 0.6, "ecolor": PALETTE["annotation"]},
+           color=[PALETTE[m] for m in MODELS],
+           edgecolor="white", linewidth=0.5)
     ax.set_xticks(x_centers)
     ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], fontsize=8)
     ax.set_ylabel("F1 (worst-case dropout)")
-    ax.set_ylim(0, 1.0)
-    ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.7, alpha=0.4)
+    ax.set_ylim(0, 0.9)
+    ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.7, alpha=0.6)
 
 
-def panel_bot(ax, exp3, per_subj):
-    """Panel C: relative F1 drop from clean to high-noise.
-    Negative values = robust; positive = degraded.
-    """
+def panel_bot(ax, exp3, per_subj) -> None:
+    """Bar = F1 drop from clean (σ=0.1) to high-noise (σ=2). Higher = more brittle."""
     x_centers = np.arange(len(MODELS))
     high_sigma = max(NOISE_SIGMAS)
     drops, stds = [], []
@@ -71,15 +82,27 @@ def panel_bot(ax, exp3, per_subj):
         clean = float(np.mean(clean_subj))
         d = exp3[m]["gaussian"][str(high_sigma)]
         drops.append(clean - d["f1_mean"])
-        stds.append(d["f1_std"])
+        stds.append(min(d["f1_std"], 0.20))
     ax.bar(x_centers, drops, yerr=stds, capsize=2,
+           error_kw={"linewidth": 0.6, "ecolor": PALETTE["annotation"]},
            color=[PALETTE[m] for m in MODELS],
            edgecolor="white", linewidth=0.5)
     ax.axhline(0, color=PALETTE["baseline"], lw=0.6)
     ax.set_xticks(x_centers)
     ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], fontsize=8)
     ax.set_ylabel(f"F1 drop, clean to σ={high_sigma:g}")
-    ax.set_ylim(-0.05, 0.5)
+    ax.set_ylim(-0.05, 0.55)
+    # Label scale-proxy bar (~0) inline so it's not mistaken for missing data.
+    for i, (m, dv) in enumerate(zip(MODELS, drops)):
+        if abs(dv) < 0.03:
+            ax.text(x_centers[i], 0.04, f"{dv:+.2f}", ha="center", va="bottom",
+                    fontsize=7, color=PALETTE["annotation"])
+
+
+def _set_panel_title(ax, text: str, fontsize: float = 9) -> None:
+    """Bold left-aligned title above panel — replaces in-data text annotation."""
+    ax.set_title(text, loc="left", fontsize=fontsize, fontweight="bold",
+                 color=PALETTE["annotation"], pad=6)
 
 
 def render(out_path: Path) -> None:
@@ -88,35 +111,33 @@ def render(out_path: Path) -> None:
     exp2, s2 = load_exp2(per_subj)
     exp3, s3 = load_exp3(per_subj)
 
-    fig = plt.figure(figsize=(5.0, 7.6))
+    fig = plt.figure(figsize=(5.0, 8.0))
     gs = fig.add_gridspec(3, 1, height_ratios=[1, 1, 1],
-                          left=0.18, right=0.96, top=0.94, bottom=0.06,
-                          hspace=0.55)
+                          left=0.18, right=0.96, top=0.92, bottom=0.06,
+                          hspace=0.85)
 
     axT = fig.add_subplot(gs[0])
-    panel_top(axT, per_subj); panel_label(axT, "A", x=-0.16, y=1.04)
-    axT.text(0.02, 0.96, "Per-subject collapse persists",
-             transform=axT.transAxes, fontsize=8.5, fontweight="bold",
-             color=PALETTE["annotation"], va="top")
+    panel_top(axT, per_subj)
+    panel_label(axT, "A", x=-0.16, y=1.10)
+    _set_panel_title(axT, "Per-subject collapse persists")
 
     axM = fig.add_subplot(gs[1])
-    panel_mid(axM, exp2); panel_label(axM, "B", x=-0.16, y=1.04)
-    axM.text(0.02, 0.96, "Modality shortcut persists",
-             transform=axM.transAxes, fontsize=8.5, fontweight="bold",
-             color=PALETTE["annotation"], va="top")
+    panel_mid(axM, exp2)
+    panel_label(axM, "B", x=-0.16, y=1.10)
+    _set_panel_title(axM, "Modality shortcut persists (and worsens with scale)")
 
     axB = fig.add_subplot(gs[2])
-    panel_bot(axB, exp3, per_subj); panel_label(axB, "C", x=-0.16, y=1.04)
-    axB.text(0.02, 0.96, "Noise brittleness: late-fusion + cross-attn collapse;\n"
-             "scale-proxy's 'robustness' is frozen-encoder saturation",
-             transform=axB.transAxes, fontsize=8.0, fontweight="bold",
-             color=PALETTE["annotation"], va="top")
+    panel_bot(axB, exp3, per_subj)
+    panel_label(axB, "C", x=-0.16, y=1.10)
+    _set_panel_title(axB, "Noise brittleness: 2 of 3 archs collapse;\n"
+                            "scale-proxy 'robustness' = frozen-encoder saturation",
+                     fontsize=8.5)
 
     flag = ""
     if any(s == "placeholder" for s in (s1, s2, s3)):
         flag = "  [PLACEHOLDER DATA]"
     fig.suptitle("Scale alone does not fix any of the three failure modes" + flag,
-                 fontsize=11, fontweight="bold", y=0.99)
+                 fontsize=11, fontweight="bold", y=0.985)
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)

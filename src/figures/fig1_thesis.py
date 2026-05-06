@@ -49,12 +49,13 @@ def _failure_panel_subject(ax_inset):
 
 
 def _failure_panel_modality(ax_inset):
-    bars = [0.78, 0.74, 0.18, 0.71]
-    colors = [PALETTE["cross_attention"]] * 4
-    colors[2] = PALETTE["stress"]
-    ax_inset.bar(range(4), bars, color=colors, edgecolor="white", linewidth=0.5)
-    ax_inset.set_xticks(range(4))
-    ax_inset.set_xticklabels(["full", "−ACC", "−EDA", "−BVP"], fontsize=6)
+    bars = [0.78, 0.74, 0.71, 0.18, 0.76]
+    labels = ["full", "−ACC", "−BVP", "−EDA", "−TEMP"]
+    colors = [PALETTE["cross_attention"]] * 5
+    colors[3] = PALETTE["stress"]
+    ax_inset.bar(range(5), bars, color=colors, edgecolor="white", linewidth=0.5)
+    ax_inset.set_xticks(range(5))
+    ax_inset.set_xticklabels(labels, fontsize=6)
     ax_inset.set_ylim(0, 1)
     ax_inset.set_yticks([0, 1])
     ax_inset.set_ylabel("F1", fontsize=7, labelpad=1)
@@ -80,7 +81,7 @@ def _failure_panel_noise(ax_inset):
 
 def _generative_prior_inset(ax):
     """Tiny schematic: 4 modality circles -> shared latent <- 4 modality circles."""
-    ax.set_xlim(0, 10); ax.set_ylim(0, 4)
+    ax.set_xlim(-0.2, 10.2); ax.set_ylim(0, 4)
     ax.set_aspect("equal")
     ax.axis("off")
     mods = ["ACC", "BVP", "EDA", "TEMP"]
@@ -93,31 +94,27 @@ def _generative_prior_inset(ax):
         ax.text(1.0, y, m, ha="center", va="center", fontsize=6,
                 color=PALETTE["annotation"])
     # latent
-    latent = FancyBboxPatch((4.2, 1.4), 1.6, 1.6,
+    latent = FancyBboxPatch((4.0, 1.3), 2.0, 1.8,
                             boxstyle="round,pad=0.02,rounding_size=0.05",
                             ec=PALETTE["cross_modal_recon"],
                             fc="white", lw=1.4)
     ax.add_patch(latent)
-    ax.text(5.0, 2.55, "shared", ha="center", va="center", fontsize=7,
+    ax.text(5.0, 2.5, "shared latent", ha="center", va="center", fontsize=7,
             color=PALETTE["annotation"], fontweight="bold")
-    ax.text(5.0, 2.15, "latent", ha="center", va="center", fontsize=7,
-            color=PALETTE["annotation"], fontweight="bold")
-    ax.text(5.0, 1.75, "prior", ha="center", va="center", fontsize=7,
+    ax.text(5.0, 1.95, "prior", ha="center", va="center", fontsize=7,
             color=PALETTE["annotation"], fontweight="bold")
     # right side reconstructed modalities
     for y, m in zip(ys, mods):
-        c = mpatches.Circle((9.0, y), 0.30, ec=PALETTE["cross_modal_recon"],
+        c = mpatches.Circle((8.6, y), 0.30, ec=PALETTE["cross_modal_recon"],
                              fc="white", lw=1.0, ls="--")
         ax.add_patch(c)
-        ax.text(9.0, y, m, ha="center", va="center", fontsize=6,
+        ax.text(8.6, y, m, ha="center", va="center", fontsize=6,
                 color=PALETTE["annotation"])
-    # arrows in
     for y in ys:
-        _arrow(ax, 1.4, y, 4.15, 2.2, color=PALETTE["cross_modal_recon"], lw=0.8)
-    # arrows out
+        _arrow(ax, 1.4, y, 4.0, 2.2, color=PALETTE["cross_modal_recon"], lw=0.8)
     for y in ys:
-        _arrow(ax, 5.85, 2.2, 8.6, y, color=PALETTE["cross_modal_recon"], lw=0.8)
-    ax.text(5.0, 0.4, "each modality reconstructs the others",
+        _arrow(ax, 6.0, 2.2, 8.2, y, color=PALETTE["cross_modal_recon"], lw=0.8)
+    ax.text(5.0, 0.45, "each modality reconstructs the others",
             ha="center", va="center", fontsize=7, style="italic",
             color=PALETTE["annotation"])
 
@@ -166,30 +163,32 @@ def render(out_path: Path) -> None:
 
         column_axes.append(ax)
 
-    # Convergence arrows row -> central conclusion
+    # Convergence arrows row -> central conclusion. Stagger targets so
+    # arrowheads don't pile up at a single point on the conclusion box top.
     ax_arrow = fig.add_subplot(gs[1, :])
     ax_arrow.axis("off")
     ax_arrow.set_xlim(0, 1); ax_arrow.set_ylim(0, 1)
-    for col_x in [0.18, 0.50, 0.82]:
-        _arrow(ax_arrow, col_x, 0.95, 0.5, 0.10,
+    for src_x, tgt_x in [(0.18, 0.42), (0.50, 0.50), (0.82, 0.58)]:
+        _arrow(ax_arrow, src_x, 0.95, tgt_x, 0.10,
                color=PALETTE["annotation"], lw=1.2)
 
-    # Bottom row: conclusion + generative prior inset
+    # Bottom row: conclusion box (everything inside) + generative prior inset.
     ax_concl = fig.add_subplot(gs[2, 0:2])
     ax_concl.axis("off"); ax_concl.set_xlim(0, 1); ax_concl.set_ylim(0, 1)
-    _box(ax_concl, 0.02, 0.55, 0.96, 0.40,
+    _box(ax_concl, 0.02, 0.05, 0.96, 0.92,
          ec=PALETTE["stress"], fc="#FFF5F5", lw=1.6)
-    ax_concl.text(0.5, 0.83, "Three faces of one structural problem:",
+    ax_concl.text(0.5, 0.85, "Three faces of one structural problem:",
                   ha="center", va="center", fontsize=10,
                   color=PALETTE["annotation"])
-    ax_concl.text(0.5, 0.65, "distribution shift current fusion architectures cannot bridge",
+    ax_concl.text(0.5, 0.66,
+                  "distribution shift that current fusion\narchitectures cannot bridge",
                   ha="center", va="center", fontsize=11, fontweight="bold",
                   color=PALETTE["stress"])
-    ax_concl.text(0.5, 0.30, "Proposed direction:",
+    ax_concl.text(0.5, 0.32, "Proposed direction:",
                   ha="center", va="center", fontsize=9, style="italic",
                   color=PALETTE["annotation"])
-    ax_concl.text(0.5, 0.10,
-                  "neuro-inspired architectural priors (e.g., cross-modal generative)",
+    ax_concl.text(0.5, 0.16,
+                  "neuro-inspired architectural priors\n(e.g., cross-modal generative — see inset)",
                   ha="center", va="center", fontsize=8.5, style="italic",
                   color=PALETTE["annotation"])
 
