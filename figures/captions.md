@@ -22,15 +22,20 @@
 > seeds; horizontal bar is the per-architecture mean. Subject S17 collapses
 > to F1 ≈ 0.04 across all three architectures, hidden by the aggregate mean
 > of 0.72–0.81.
-> **(B)** Test-time modality dropout. Removing the BVP+EDA pair collapses F1
-> by 50–53 pp for the late-fusion MLP and cross-attention transformer; the
-> scale-proxy is even worse, losing 61 pp when EDA+TEMP are removed. EDA is
-> the dominant single-modality shortcut across all three architectures.
-> **(C)** Test-time additive Gaussian noise on all modalities. F1 drops by
-> 33–35 pp from σ=0.1 to σ=2.0 for the late-fusion and cross-attention
-> architectures. The scale-proxy is roughly flat — an artifact of frozen
-> randomly-initialized encoders saturating at large input magnitudes, not a
-> genuine fix to the underlying brittleness (see Figure 4 caption).
+> **(B)** Test-time modality dropout (zero-mask at inference). Each bar is
+> the mean F1 across the 3 seeds × 15 LOSO folds (45 evaluations per condition);
+> error bars are ±1 standard deviation across that pooled seed-fold sample
+> (the per-subject and per-seed contributions are not separated). Removing
+> the BVP+EDA pair collapses F1 by 50–53 pp for the late-fusion MLP and
+> cross-attention transformer; the scale-proxy is even worse, losing 61 pp
+> when EDA+TEMP are removed. EDA is the dominant single-modality shortcut
+> across all three architectures (see Figure 3B and Exp 5).
+> **(C)** Test-time additive Gaussian noise on all modalities. Lines show
+> mean F1 across 3 seeds × 15 folds; shaded bands are ±1 std across the same
+> pooled sample. F1 drops by 33–35 pp from σ=0.1 to σ=2.0 for late-fusion
+> and cross-attention; scale-proxy is roughly flat — an artefact of
+> frozen randomly-initialised encoders saturating at large input magnitudes,
+> not a genuine fix to the underlying brittleness (see Figure 4 caption).
 > *N = 15 subjects (S2–S11, S13–S17), 3 seeds {42, 1337, 2024}, binary
 > stress vs. non-stress, 60 s windows at 4 Hz, per-subject z-score
 > normalization, leave-one-subject-out CV (135 trained checkpoints).*
@@ -38,13 +43,15 @@
 ## Figure 3 — Unification
 
 > **Figure 3. The three failure modes share a common subject- and
-> modality-level structure.** **(A)** Each point is one subject; x-axis is
-> clean LOSO F1 averaged over architectures and seeds, y-axis is worst-case
-> modality-dropout F1, color is high-noise F1. Subjects S14 and S17 are in
-> the bottom-left "fragile across all three failure modes" cluster (highlighted).
-> Spearman ρ = +0.17 (Pearson r = +0.22) reflects the diagonal trend of the
-> robust majority; the unification claim is most clearly visible in the bottom-left
-> cluster, where collapse subjects fail under every condition.
+> modality-level structure.** **(A)** Each point is one subject (mean over
+> the three architectures and three seeds): x = clean LOSO F1; y = worst-case
+> modality-dropout F1; colour = high-noise (σ=2.0) F1. The pink-shaded
+> bottom-left rectangle highlights subjects S14 and S17, which collapse on
+> every failure mode — that cluster, not the global trend, is the unification
+> claim. Cross-subject correlation between clean F1 and worst-dropout F1
+> across all 15 subjects is weak in aggregate (Spearman ρ = +0.17, Pearson
+> r = +0.22); the strong cluster signal is intentionally separated from the
+> aggregate correlation in the panel.
 > **(B)** F1 drop induced by removing each single modality, grouped by
 > architecture. EDA dominates across all three: the late-fusion MLP loses
 > 0.42 F1, cross-attention 0.39, scale-proxy 0.57. ACC, BVP, and TEMP are
@@ -61,23 +68,29 @@
 ## Figure 4 — Scale alone does not fix the failure modes
 
 > **Figure 4. Three failure modes persist across a ~37× sweep in trainable
-> parameter count.** Comparing late-fusion MLP (~50 k params, ~50 k trainable),
-> cross-attention transformer (~150 k params, all trainable), and a frozen
-> randomly-initialized scale proxy (~1.85 M total, ~130 k trainable head):
+> parameter count.** Architectures compared: the late-fusion MLP
+> (~50 k parameters, all trainable), the cross-attention transformer
+> (~150 k parameters, all trainable), and a frozen randomly-initialised
+> scale proxy (~1.85 M total parameters, ~130 k trainable head — see D05).
 > **(A)** Per-subject F1 — the bimodal distribution and per-subject collapse
-> persist across all three; scale-proxy collapses 2/15 vs. 1/15 for the others.
-> **(B)** F1 under the worst-case test-time modality dropout — scale-proxy
-> is *worse* (F1 ≈ 0.11) than both smaller architectures (≈ 0.28). The shortcut
-> is amplified, not eliminated, by parameter count.
-> **(C)** F1 drop from clean (σ=0.1) to high-noise (σ=2.0). Late-fusion (35 pp)
-> and cross-attention (33 pp) degrade as expected; scale-proxy is flat, but
-> this reflects frozen-encoder feature saturation rather than scale-driven
-> robustness — the encoder maps large-amplitude noisy inputs into nearly
-> the same feature region as clean inputs, an artifact of random
-> initialisation rather than a fix to the structural failure.
-> *Scale proxy is randomly-initialized then frozen, with only the fusion head
-> trained — framed honestly as a capacity-and-depth match for "what bigger
-> models would do," not a true pretrained encoder. See decisions/d05.*
+> persist across all three; the scale-proxy collapses on 2/15 subjects vs.
+> 1/15 for the others.
+> **(B)** F1 under the worst-case test-time modality dropout per architecture
+> (each bar is the mean across 3 seeds × 15 folds for that architecture's
+> worst-case dropout condition; error bars are ±1 std clipped to ≤0.20).
+> The modality shortcut persists across the parameter sweep; the scale-proxy
+> is the worst (F1 ≈ 0.11 vs ≈ 0.28 for the trained-encoder architectures),
+> and the gap is within seed-fold variance.
+> **(C)** F1 drop from clean (σ=0.1) to high-noise (σ=2.0) for the two
+> *trained-encoder* architectures (late-fusion 35 pp, cross-attention 33 pp).
+> The scale-proxy is intentionally omitted from this panel: its frozen
+> randomly-initialised encoder maps large-amplitude noisy inputs into nearly
+> the same feature region as clean inputs (saturation), producing an
+> artefactual ≈0 drop (raw σ=2.0 F1 = 0.732 vs clean 0.721, Δ = +0.011) that
+> would misrepresent structural robustness if plotted alongside the trained
+> encoders. Scale-proxy framing as a "capacity-and-depth match for what
+> bigger pretrained models would do" — not a true pretrained encoder — is
+> documented in decisions/d05.
 
 ## Note on Experiment 4 (cross-modal reconstruction) exclusion
 

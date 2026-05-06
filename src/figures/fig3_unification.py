@@ -127,27 +127,17 @@ def panel_A(ax, per_subj, exp2_per_subj, exp3_per_subj, status):
                if x < 0.55 and y < 0.20]
     fragile_names = [f[0] for f in fragile]
 
-    # Label only fragile + 1-2 informative outliers; suppress dense-cluster labels.
-    sorted_by_y = sorted(zip(labels, xs, ys), key=lambda t: t[2])
-    extra_labelled = [lab for lab, _, _ in sorted_by_y[:4] if lab not in fragile_names][:2]
-    label_set = set(fragile_names) | set(extra_labelled)
+    # Label ONLY fragile-cluster subjects (S14, S17). Other labels would not
+    # serve the cluster-led story this panel is making. Correlation values
+    # (Spearman ρ, Pearson r) are reported in the caption only.
     fragile_set = set(fragile_names)
     for lab, x, y in zip(labels, xs, ys):
-        if lab not in label_set:
+        if lab not in fragile_set:
             continue
         dx, dy = _label_offset(x, y, lab, fragile_set)
         ax.annotate(lab, (x, y), xytext=(dx, dy), textcoords="offset points",
-                    fontsize=7, fontweight="bold",
-                    color=PALETTE["annotation"], alpha=0.9)
-
-    ax.text(0.04, 0.94, f"Spearman ρ = {r_s:+.2f}   Pearson r = {r_p:+.2f}",
-            transform=ax.transAxes, fontsize=9.5,
-            color=PALETTE["annotation"], fontweight="bold")
-    if fragile_names:
-        ax.text(0.04, 0.87,
-                f"{', '.join(fragile_names)}: fragile across all 3 failure modes",
-                transform=ax.transAxes, fontsize=8, style="italic",
-                color=PALETTE["stress"])
+                    fontsize=7.5, fontweight="bold",
+                    color=PALETTE["annotation"], alpha=0.95)
 
     if fragile:
         x_lo = min(f[1] for f in fragile) - 0.04
@@ -156,8 +146,19 @@ def panel_A(ax, per_subj, exp2_per_subj, exp3_per_subj, status):
         y_hi = max(f[2] for f in fragile) + 0.10
         rect = Rectangle((x_lo, y_lo), x_hi - x_lo, y_hi - y_lo,
                          fc=PALETTE["stress"], ec=PALETTE["stress"],
-                         alpha=0.10, lw=0.6, ls="--", zorder=1)
+                         alpha=0.10, lw=0.8, ls="--", zorder=1)
         ax.add_patch(rect)
+        # Annotate the rectangle directly with the cluster claim.
+        if fragile_names:
+            ax.annotate(
+                f"{', '.join(fragile_names)}:\nfragile across all 3 failure modes",
+                xy=((x_lo + x_hi) / 2, y_hi),
+                xytext=((x_lo + x_hi) / 2 + 0.15, y_hi + 0.18),
+                fontsize=8.5, fontweight="bold", color=PALETTE["stress"],
+                ha="left", va="bottom",
+                arrowprops=dict(arrowstyle="-", color=PALETTE["stress"],
+                                lw=0.7, connectionstyle="arc3,rad=-0.15"),
+            )
 
     ax.set_xlabel("Clean F1 (LOSO, mean over architectures)")
     ax.set_ylabel("Worst-dropout F1 (mean over architectures)")

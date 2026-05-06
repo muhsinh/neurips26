@@ -50,11 +50,8 @@ def panel_A(ax, per_subj, overall, status):
                   color=PALETTE[m], lw=2.0, zorder=4)
 
     ax.axhline(0.0, color=PALETTE["baseline"], linestyle="--", lw=0.8, alpha=0.5)
-    ax.text(-0.55, 0.01, "majority-class F1 = 0",
+    ax.text(-0.55, 0.01, "always-predict-non-stress F1 = 0",
             fontsize=7, color=PALETTE["baseline"], va="bottom", ha="left")
-    ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.8, alpha=0.5)
-    ax.text(-0.55, 0.31, "collapse threshold (0.3)",
-            fontsize=7, color=PALETTE["stress"], va="bottom", ha="left")
 
     ax.set_xticks(x_centers)
     ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], rotation=10, ha="right")
@@ -62,20 +59,37 @@ def panel_A(ax, per_subj, overall, status):
     ax.set_ylim(0.0, 1.05)
     ax.set_xlim(-0.7, len(MODELS) - 0.4)
 
-    # Annotate worst subject in left margin so callout doesn't overlap data.
+    # Annotate the universal collapse subject — single label, three thin lines
+    # to all three architectures' S17 points so the cross-arch story is explicit.
+    target_subj = None
+    targets = []  # (x_data, y_data) per architecture
     for m_idx, m in enumerate(MODELS):
         valid = [(s, per_subj[m][s]["f1_mean"]) for s in SUBJECTS
                  if per_subj[m][s]["f1_mean"] is not None]
         if not valid:
             continue
-        worst_subj, worst_f1 = min(valid, key=lambda p: p[1])
-        ax.annotate(f"{worst_subj} F1={worst_f1:.2f}",
-                    xy=(m_idx, max(worst_f1, 0.005)),
-                    xytext=(m_idx + 0.50, 0.18),
-                    fontsize=7.5, color=PALETTE["annotation"],
-                    arrowprops=dict(arrowstyle="-", color=PALETTE["annotation"],
-                                    lw=0.5, connectionstyle="arc3,rad=-0.2"))
-        break
+        s_subj, s_f1 = min(valid, key=lambda p: p[1])
+        if target_subj is None:
+            target_subj = s_subj
+        if s_subj == target_subj:
+            targets.append((m_idx, max(s_f1, 0.005)))
+    if target_subj is not None and targets:
+        # Anchor callout in the left margin, draw a single short line to the
+        # leftmost S17 point. Caption explains the cross-arch persistence.
+        text_xy = (-0.62, 0.18)
+        ax.text(text_xy[0], text_xy[1],
+                f"{target_subj} collapses across\n"
+                f"all three architectures\n"
+                f"(F1 ≈ {targets[0][1]:.2f})",
+                fontsize=7.5, color=PALETTE["annotation"],
+                ha="left", va="bottom", fontweight="bold")
+        first_tx, first_ty = targets[0]
+        ax.annotate("", xy=(first_tx - 0.05, first_ty + 0.02),
+                    xytext=(text_xy[0] + 0.30, text_xy[1] + 0.02),
+                    arrowprops=dict(arrowstyle="-",
+                                    color=PALETTE["annotation"],
+                                    lw=0.5, alpha=0.7,
+                                    connectionstyle="arc3,rad=-0.2"))
 
 
 def panel_B(ax, exp2, status):
@@ -126,9 +140,6 @@ def panel_C(ax, exp3, status):
         ax.fill_between(sigmas, np.clip(means - stds, 0, 1),
                         np.clip(means + stds, 0, 1),
                         color=PALETTE[m], alpha=0.15)
-    ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.8, alpha=0.5)
-    ax.text(sigmas[0], 0.31, "collapse 0.3",
-            fontsize=7, color=PALETTE["stress"], ha="left", va="bottom")
     ax.set_xlabel("Gaussian noise σ (× input std)")
     ax.set_ylabel("F1 (stress)")
     ax.set_xscale("log")

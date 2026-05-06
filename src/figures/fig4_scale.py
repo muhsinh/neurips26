@@ -43,8 +43,7 @@ def panel_top(ax, per_subj) -> None:
                   color=PALETTE[m], lw=1.6)
     ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.7, alpha=0.6)
     ax.set_xticks(x_centers)
-    labels = [f"{MODEL_LABELS[m]}\n({MODEL_PARAMS[m]} params)" for m in MODELS]
-    ax.set_xticklabels(labels, fontsize=8)
+    ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], fontsize=8)
     ax.set_ylabel("Per-subject F1")
     ax.set_ylim(-0.04, 1.05)
 
@@ -72,11 +71,18 @@ def panel_mid(ax, exp2) -> None:
 
 
 def panel_bot(ax, exp3, per_subj) -> None:
-    """Bar = F1 drop from clean (σ=0.1) to high-noise (σ=2). Higher = more brittle."""
-    x_centers = np.arange(len(MODELS))
+    """Bar = F1 drop from clean (σ=0.1) to high-noise (σ=2). Higher = more brittle.
+
+    Scale-proxy is omitted from this panel: its frozen randomly-initialised
+    encoder maps high-amplitude noisy inputs into the same feature region as
+    clean inputs (saturation), producing an artefactual ≈0 drop. Including it
+    misleads the reader. The omission is documented in the caption.
+    """
+    plotted_models = [m for m in MODELS if m != "scale_proxy"]
+    x_centers = np.arange(len(plotted_models))
     high_sigma = max(NOISE_SIGMAS)
     drops, stds = [], []
-    for m in MODELS:
+    for m in plotted_models:
         clean_subj = [per_subj[m][s]["f1_mean"] for s in SUBJECTS
                       if per_subj[m][s]["f1_mean"] is not None]
         clean = float(np.mean(clean_subj))
@@ -85,18 +91,14 @@ def panel_bot(ax, exp3, per_subj) -> None:
         stds.append(min(d["f1_std"], 0.20))
     ax.bar(x_centers, drops, yerr=stds, capsize=2,
            error_kw={"linewidth": 0.6, "ecolor": PALETTE["annotation"]},
-           color=[PALETTE[m] for m in MODELS],
+           color=[PALETTE[m] for m in plotted_models],
            edgecolor="white", linewidth=0.5)
     ax.axhline(0, color=PALETTE["baseline"], lw=0.6)
     ax.set_xticks(x_centers)
-    ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], fontsize=8)
+    ax.set_xticklabels([MODEL_LABELS[m] for m in plotted_models], fontsize=8)
     ax.set_ylabel(f"F1 drop, clean to σ={high_sigma:g}")
     ax.set_ylim(-0.05, 0.55)
-    # Label scale-proxy bar (~0) inline so it's not mistaken for missing data.
-    for i, (m, dv) in enumerate(zip(MODELS, drops)):
-        if abs(dv) < 0.03:
-            ax.text(x_centers[i], 0.04, f"{dv:+.2f}", ha="center", va="bottom",
-                    fontsize=7, color=PALETTE["annotation"])
+    ax.set_xlim(-0.7, len(plotted_models) - 0.3)
 
 
 def _set_panel_title(ax, text: str, fontsize: float = 9) -> None:
@@ -124,13 +126,15 @@ def render(out_path: Path) -> None:
     axM = fig.add_subplot(gs[1])
     panel_mid(axM, exp2)
     panel_label(axM, "B", x=-0.16, y=1.10)
-    _set_panel_title(axM, "Modality shortcut persists (and worsens with scale)")
+    _set_panel_title(axM, "Modality shortcut persists across the parameter sweep;\n"
+                            "scale-proxy is worst (within seed-fold variance)",
+                     fontsize=8.5)
 
     axB = fig.add_subplot(gs[2])
     panel_bot(axB, exp3, per_subj)
     panel_label(axB, "C", x=-0.16, y=1.10)
-    _set_panel_title(axB, "Noise brittleness: 2 of 3 archs collapse;\n"
-                            "scale-proxy 'robustness' = frozen-encoder saturation",
+    _set_panel_title(axB, "Noise brittleness on the two trained-encoder archs\n"
+                            "(scale-proxy omitted — see caption)",
                      fontsize=8.5)
 
     flag = ""
