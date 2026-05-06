@@ -9,8 +9,39 @@ Layout (D07): A is 2x width on left, B and C stacked on right.
 """
 from __future__ import annotations
 from pathlib import Path
+import json
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+def _inset_ci_widths(parent_ax):
+    """Small inset showing distribution of bootstrap CI widths from Exp6.
+
+    Falls back silently if the data isn't there.
+    """
+    p = Path("results/exp6_bootstrap_ci/per_subject_ci.json")
+    if not p.exists():
+        return
+    d = json.load(open(p))
+    widths = []
+    for m in d:
+        for s in d[m]:
+            for sd, info in d[m][s].get("per_seed", {}).items():
+                widths.append(info["boot_ci_hi"] - info["boot_ci_lo"])
+    if not widths:
+        return
+    inset = parent_ax.inset_axes([0.62, 0.04, 0.36, 0.20])
+    inset.hist(widths, bins=20, color="#888888", edgecolor="white", linewidth=0.4)
+    inset.set_xlabel("window-bootstrap 95% CI width", fontsize=6, labelpad=1)
+    inset.set_ylabel("# (subj×arch×seed)", fontsize=6, labelpad=1)
+    inset.tick_params(labelsize=6)
+    inset.set_xlim(0, 1.0)
+    median = float(np.median(widths))
+    inset.axvline(median, color="#333333", linestyle="--", lw=0.6)
+    inset.text(median + 0.02, inset.get_ylim()[1] * 0.85,
+               f"median {median:.2f}", fontsize=6, color="#333333")
+    for s in ("top", "right"):
+        inset.spines[s].set_visible(False)
 
 from src.figures.style import apply_style, PALETTE, MODEL_LABELS, panel_label
 from src.figures._data_loader import (
@@ -55,6 +86,8 @@ def panel_A(ax, per_subj, overall, status):
     ax.set_ylabel("F1 (stress class), per held-out subject")
     ax.set_ylim(-0.04, 1.05)
     ax.set_xlim(-0.6, len(MODELS) - 0.4)
+
+    _inset_ci_widths(ax)
 
     # Annotate worst subject for first model with real data
     for m_idx, m in enumerate(MODELS):
