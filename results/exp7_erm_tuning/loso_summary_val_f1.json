@@ -1,107 +1,253 @@
-[
-  {
-    "test_subject": "S2",
-    "lr": 0.003,
-    "wd": 0.0001,
-    "dropout": 0.3,
-    "test_f1": 0.9523809523809523
+{
+  "_metadata": {
+    "git_commit": "f730ad7",
+    "config_hyperparameters": {
+      "seed": 42,
+      "seeds": [
+        42,
+        1337,
+        2024
+      ],
+      "dataset": {
+        "name": "WESAD",
+        "raw_dir": "data/raw/WESAD",
+        "processed_dir": "data/processed",
+        "subjects": [
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S13",
+          "S14",
+          "S15",
+          "S16",
+          "S17"
+        ],
+        "sample_rate_hz": 4,
+        "window_seconds": 60,
+        "modalities": [
+          "ACC",
+          "BVP",
+          "EDA",
+          "TEMP"
+        ],
+        "label_map": {
+          "stress": [
+            2
+          ],
+          "non_stress": [
+            1,
+            3
+          ]
+        },
+        "drop_labels": [
+          0,
+          4,
+          5,
+          6,
+          7
+        ]
+      },
+      "train": {
+        "batch_size": 64,
+        "lr": 0.001,
+        "weight_decay": 0.0001,
+        "max_epochs": 30,
+        "patience": 5,
+        "device": "auto"
+      },
+      "models": {
+        "late_fusion_mlp": {
+          "hidden_per_mod": 64,
+          "fusion_hidden": 64,
+          "dropout": 0.3
+        },
+        "cross_attention": {
+          "feature_dim": 64,
+          "n_heads": 4,
+          "n_layers": 2,
+          "dropout": 0.1
+        },
+        "scale_proxy": {
+          "feature_dim": 128,
+          "n_layers": 3,
+          "n_heads": 4,
+          "dropout": 0.1,
+          "freeze_encoder": true
+        }
+      },
+      "experiments": {
+        "dropout_conditions": [
+          "all_clean",
+          "drop_ACC",
+          "drop_BVP",
+          "drop_EDA",
+          "drop_TEMP",
+          "drop_ACC_BVP",
+          "drop_ACC_EDA",
+          "drop_ACC_TEMP",
+          "drop_BVP_EDA",
+          "drop_BVP_TEMP",
+          "drop_EDA_TEMP"
+        ],
+        "noise_sigmas": [
+          0.1,
+          0.5,
+          1.0,
+          2.0
+        ],
+        "realistic_corruptions": [
+          "acc_motion",
+          "eda_drift",
+          "bvp_dropout"
+        ]
+      },
+      "paths": {
+        "results_root": "results",
+        "figures_root": "figures",
+        "logs_root": "logs"
+      }
+    },
+    "seeds_used": [
+      42,
+      1337,
+      2024
+    ],
+    "experiment": "exp7_erm_tuning",
+    "architecture": "cross_attention",
+    "seed": 42,
+    "hp_grid": {
+      "lr": [
+        0.0003,
+        0.001,
+        0.003
+      ],
+      "weight_decay": [
+        1e-05,
+        0.0001
+      ],
+      "dropout": [
+        0.1,
+        0.3
+      ]
+    },
+    "selection_rules": [
+      "train_loss",
+      "val_f1"
+    ],
+    "validation_protocol": "held-out subject, numerically-next in WESAD order, wraparound"
   },
-  {
-    "test_subject": "S3",
-    "lr": 0.003,
-    "wd": 0.0001,
-    "dropout": 0.3,
-    "test_f1": 0.47058823529411764
-  },
-  {
-    "test_subject": "S4",
-    "lr": 0.001,
-    "wd": 0.0001,
-    "dropout": 0.1,
-    "test_f1": 1.0
-  },
-  {
-    "test_subject": "S5",
-    "lr": 0.001,
-    "wd": 1e-05,
-    "dropout": 0.3,
-    "test_f1": 0.8333333333333334
-  },
-  {
-    "test_subject": "S6",
-    "lr": 0.003,
-    "wd": 1e-05,
-    "dropout": 0.3,
-    "test_f1": 0.9473684210526315
-  },
-  {
-    "test_subject": "S7",
-    "lr": 0.0003,
-    "wd": 0.0001,
-    "dropout": 0.1,
-    "test_f1": 1.0
-  },
-  {
-    "test_subject": "S8",
-    "lr": 0.001,
-    "wd": 0.0001,
-    "dropout": 0.1,
-    "test_f1": 1.0
-  },
-  {
-    "test_subject": "S9",
-    "lr": 0.0003,
-    "wd": 0.0001,
-    "dropout": 0.3,
-    "test_f1": 1.0
-  },
-  {
-    "test_subject": "S10",
-    "lr": 0.001,
-    "wd": 0.0001,
-    "dropout": 0.1,
-    "test_f1": 0.9565217391304348
-  },
-  {
-    "test_subject": "S11",
-    "lr": 0.001,
-    "wd": 0.0001,
-    "dropout": 0.1,
-    "test_f1": 0.7058823529411765
-  },
-  {
-    "test_subject": "S13",
-    "lr": 0.003,
-    "wd": 1e-05,
-    "dropout": 0.3,
-    "test_f1": 1.0
-  },
-  {
-    "test_subject": "S14",
-    "lr": 0.003,
-    "wd": 0.0001,
-    "dropout": 0.3,
-    "test_f1": 0.5185185185185185
-  },
-  {
-    "test_subject": "S15",
-    "lr": 0.003,
-    "wd": 1e-05,
-    "dropout": 0.3,
-    "test_f1": 0.8421052631578947
-  },
-  {
-    "test_subject": "S16",
-    "lr": 0.0003,
-    "wd": 0.0001,
-    "dropout": 0.3,
-    "test_f1": 0.9523809523809523
-  },
-  {
-    "test_subject": "S17",
-    "lr": 0.001,
-    "wd": 0.0001,
-    "dropout": 0.3,
-    "test_f1": 0.0
-  }
-]
+  "results": [
+    {
+      "test_subject": "S2",
+      "lr": 0.003,
+      "wd": 0.0001,
+      "dropout": 0.3,
+      "test_f1": 0.9523809523809523
+    },
+    {
+      "test_subject": "S3",
+      "lr": 0.003,
+      "wd": 0.0001,
+      "dropout": 0.3,
+      "test_f1": 0.47058823529411764
+    },
+    {
+      "test_subject": "S4",
+      "lr": 0.001,
+      "wd": 0.0001,
+      "dropout": 0.1,
+      "test_f1": 1.0
+    },
+    {
+      "test_subject": "S5",
+      "lr": 0.001,
+      "wd": 1e-05,
+      "dropout": 0.3,
+      "test_f1": 0.8333333333333334
+    },
+    {
+      "test_subject": "S6",
+      "lr": 0.003,
+      "wd": 1e-05,
+      "dropout": 0.3,
+      "test_f1": 0.9473684210526315
+    },
+    {
+      "test_subject": "S7",
+      "lr": 0.0003,
+      "wd": 0.0001,
+      "dropout": 0.1,
+      "test_f1": 1.0
+    },
+    {
+      "test_subject": "S8",
+      "lr": 0.001,
+      "wd": 0.0001,
+      "dropout": 0.1,
+      "test_f1": 1.0
+    },
+    {
+      "test_subject": "S9",
+      "lr": 0.0003,
+      "wd": 0.0001,
+      "dropout": 0.3,
+      "test_f1": 1.0
+    },
+    {
+      "test_subject": "S10",
+      "lr": 0.001,
+      "wd": 0.0001,
+      "dropout": 0.1,
+      "test_f1": 0.9565217391304348
+    },
+    {
+      "test_subject": "S11",
+      "lr": 0.001,
+      "wd": 0.0001,
+      "dropout": 0.1,
+      "test_f1": 0.7058823529411765
+    },
+    {
+      "test_subject": "S13",
+      "lr": 0.003,
+      "wd": 1e-05,
+      "dropout": 0.3,
+      "test_f1": 1.0
+    },
+    {
+      "test_subject": "S14",
+      "lr": 0.003,
+      "wd": 0.0001,
+      "dropout": 0.3,
+      "test_f1": 0.5185185185185185
+    },
+    {
+      "test_subject": "S15",
+      "lr": 0.003,
+      "wd": 1e-05,
+      "dropout": 0.3,
+      "test_f1": 0.8421052631578947
+    },
+    {
+      "test_subject": "S16",
+      "lr": 0.0003,
+      "wd": 0.0001,
+      "dropout": 0.3,
+      "test_f1": 0.9523809523809523
+    },
+    {
+      "test_subject": "S17",
+      "lr": 0.001,
+      "wd": 0.0001,
+      "dropout": 0.3,
+      "test_f1": 0.0
+    }
+  ]
+}
