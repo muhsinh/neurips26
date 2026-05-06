@@ -50,6 +50,12 @@
 > 0.42 F1, cross-attention 0.39, scale-proxy 0.57. ACC, BVP, and TEMP are
 > close to zero impact. The shared shortcut across architectures is direct
 > evidence of a structural rather than architecture-specific failure.
+> Modality-importance rankings on the dual-modality dropout conditions
+> (6 pair-drops) agree at Spearman ρ ≥ 0.886 across every architecture pair
+> (95% bootstrap CI lower-bound ≥ 0.60, permutation p ≤ 0.016 — see Exp 5
+> in the appendix and decisions/d13). The single-modality Spearman is weaker
+> (ρ ∈ [0.20, 0.80]) because three of four modalities have near-zero impact
+> and rank-tie unstably; Pearson r exceeds 0.99 across pairs in that case.
 > *Same 135 checkpoints, same protocol as Figure 2.*
 
 ## Figure 4 — Scale alone does not fix the failure modes

@@ -1,0 +1,60 @@
+{
+  "vectors": {
+    "late_fusion_mlp": [
+      0.054940866540700475,
+      0.03105938680919608,
+      0.42231125794449687,
+      0.019719373359446988
+    ],
+    "cross_attention": [
+      -0.005027681908867724,
+      0.02037577243298119,
+      0.38797250401658107,
+      0.02378271532919287
+    ],
+    "scale_proxy": [
+      -0.04945940837275404,
+      0.00537978231683084,
+      0.5723689945473944,
+      -0.019723278515698585
+    ]
+  },
+  "conditions": [
+    "drop_ACC",
+    "drop_BVP",
+    "drop_EDA",
+    "drop_TEMP"
+  ],
+  "pairs": {
+    "late_fusion_mlp__x__cross_attention": {
+      "spearman_rho_obs": 0.19999999999999998,
+      "pearson_r_obs": 0.9897424744490946,
+      "bootstrap_rho_mean": 0.6684000000000001,
+      "bootstrap_rho_ci_lo": 0.19999999999999998,
+      "bootstrap_rho_ci_hi": 1.0,
+      "permutation_p": 0.45885411458854114,
+      "n_boot": 1000,
+      "n_perm": 10000
+    },
+    "late_fusion_mlp__x__scale_proxy": {
+      "spearman_rho_obs": 0.39999999999999997,
+      "pearson_r_obs": 0.9903191033179024,
+      "bootstrap_rho_mean": 0.5514000000000001,
+      "bootstrap_rho_ci_lo": 0.19999999999999998,
+      "bootstrap_rho_ci_hi": 1.0,
+      "permutation_p": 0.37736226377362264,
+      "n_boot": 1000,
+      "n_perm": 10000
+    },
+    "cross_attention__x__scale_proxy": {
+      "spearman_rho_obs": 0.7999999999999999,
+      "pearson_r_obs": 0.999124419933731,
+      "bootstrap_rho_mean": 0.7792,
+      "bootstrap_rho_ci_lo": 0.19999999999999998,
+      "bootstrap_rho_ci_hi": 1.0,
+      "permutation_p": 0.1698830116988301,
+      "n_boot": 1000,
+      "n_perm": 10000
+    }
+  }
+}
