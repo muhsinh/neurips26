@@ -1,0 +1,15 @@
+{
+  "model": "cross_attention",
+  "seed": 42,
+  "loso_f1_mean": 0.832,
+  "n_collapsed_below_0.3": 1,
+  "n_subjects": 15,
+  "exp2_clean_f1": 0.832,
+  "exp2_drop_EDA_f1": 0.471,
+  "exp2_drop_BVP_EDA_f1": 0.382,
+  "exp2_drop_EDA_TEMP_f1": 0.412,
+  "exp3_sigma_0.1_f1": 0.832,
+  "exp3_sigma_2.0_f1": 0.454,
+  "surfacing_thresholds_pp": 3.0,
+  "comment": "Seed-42-only baseline extracted from Exp 1/2/3 cross_attention results. Used as reference for Exp 7 surfacing rules."
+}
