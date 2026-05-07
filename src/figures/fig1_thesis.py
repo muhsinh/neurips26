@@ -82,48 +82,54 @@ def _failure_panel_noise(ax_inset):
 
 
 def _generative_prior_inset(ax):
-    """Tiny schematic: 4 modality circles -> shared latent <- 4 modality circles."""
-    ax.set_xlim(-0.2, 10.2); ax.set_ylim(0, 4)
+    """Tiny schematic: 4 modality ellipses -> shared latent <- 4 modality ellipses.
+
+    Use horizontal ellipses (wider than tall) instead of circles so 3-4 char
+    labels (ACC, BVP, EDA, TEMP) fit cleanly inside with margin at every
+    render scale.
+    """
+    ax.set_xlim(-0.4, 10.4); ax.set_ylim(0, 4)
     ax.set_aspect("equal")
     ax.axis("off")
     mods = ["ACC", "BVP", "EDA", "TEMP"]
     ys = [3.4, 2.6, 1.8, 1.0]
-    # Left-side input modalities. Larger radius (0.45) ensures every
-    # 3-4 char label clears the circle border with margin. zorder explicit
-    # so arrows draw beneath, circle border above, text on top.
+    ell_w, ell_h = 1.4, 0.55  # wider than tall — text fits
+    # Left-side input modalities.
     for y, m in zip(ys, mods):
-        c = mpatches.Circle((1.0, y), 0.45, ec=PALETTE["cross_modal_recon"],
-                            fc="white", lw=1.0, zorder=3)
-        ax.add_patch(c)
-        ax.text(1.0, y, m, ha="center", va="center", fontsize=5.5,
+        e = mpatches.Ellipse((1.0, y), ell_w, ell_h,
+                             ec=PALETTE["cross_modal_recon"],
+                             fc="white", lw=1.0, zorder=3)
+        ax.add_patch(e)
+        ax.text(1.0, y, m, ha="center", va="center", fontsize=6,
                 color=PALETTE["annotation"], zorder=4)
-    # latent — widened to 2.6 to keep label inside on every renderer
-    latent = FancyBboxPatch((3.7, 1.3), 2.6, 1.8,
+    # Latent box.
+    latent = FancyBboxPatch((3.9, 1.3), 2.4, 1.8,
                             boxstyle="round,pad=0.02,rounding_size=0.05",
                             ec=PALETTE["cross_modal_recon"],
                             fc="white", lw=1.4, zorder=3)
     ax.add_patch(latent)
-    ax.text(5.0, 2.55, "shared", ha="center", va="center", fontsize=6.5,
+    ax.text(5.1, 2.55, "shared", ha="center", va="center", fontsize=6.5,
             color=PALETTE["annotation"], fontweight="bold", zorder=4)
-    ax.text(5.0, 2.20, "latent", ha="center", va="center", fontsize=6.5,
+    ax.text(5.1, 2.20, "latent", ha="center", va="center", fontsize=6.5,
             color=PALETTE["annotation"], fontweight="bold", zorder=4)
-    ax.text(5.0, 1.85, "prior", ha="center", va="center", fontsize=6.5,
+    ax.text(5.1, 1.85, "prior", ha="center", va="center", fontsize=6.5,
             color=PALETTE["annotation"], fontweight="bold", zorder=4)
-    # Right-side reconstructed modalities (dashed border).
+    # Right-side reconstructed modalities (dashed).
     for y, m in zip(ys, mods):
-        c = mpatches.Circle((8.6, y), 0.45, ec=PALETTE["cross_modal_recon"],
-                            fc="white", lw=1.0, ls="--", zorder=3)
-        ax.add_patch(c)
-        ax.text(8.6, y, m, ha="center", va="center", fontsize=5.5,
+        e = mpatches.Ellipse((9.0, y), ell_w, ell_h,
+                             ec=PALETTE["cross_modal_recon"],
+                             fc="white", lw=1.0, ls="--", zorder=3)
+        ax.add_patch(e)
+        ax.text(9.0, y, m, ha="center", va="center", fontsize=6,
                 color=PALETTE["annotation"], zorder=4)
-    # Arrows: shrinkA/shrinkB extra so they start/end outside the larger circles.
+    # Arrows shrunk well outside the ellipse perimeter.
     for y in ys:
-        _arrow(ax, 1.0, y, 3.7, 2.2, color=PALETTE["cross_modal_recon"],
-               lw=0.8, shrinkA=12, shrinkB=4)
+        _arrow(ax, 1.0, y, 3.9, 2.2, color=PALETTE["cross_modal_recon"],
+               lw=0.8, shrinkA=18, shrinkB=4)
     for y in ys:
-        _arrow(ax, 6.3, 2.2, 8.6, y, color=PALETTE["cross_modal_recon"],
-               lw=0.8, shrinkA=4, shrinkB=12)
-    ax.text(5.0, 0.45, "each modality reconstructs the others",
+        _arrow(ax, 6.3, 2.2, 9.0, y, color=PALETTE["cross_modal_recon"],
+               lw=0.8, shrinkA=4, shrinkB=18)
+    ax.text(5.1, 0.45, "each modality reconstructs the others",
             ha="center", va="center", fontsize=7, style="italic",
             color=PALETTE["annotation"])
 
@@ -172,15 +178,14 @@ def render(out_path: Path) -> None:
 
         column_axes.append(ax)
 
-    # Convergence arrows row -> central conclusion. Three parallel arrows of
-    # equal length, hitting the conclusion-box top at evenly-spaced anchors —
-    # reads as "three independent failures of the same problem" without
-    # arrowhead pile-up.
+    # Three parallel vertical arrows: same length, same angle, evenly spaced.
+    # Reads as "three independent failures of the same problem" — no
+    # asymmetric diagonals.
     ax_arrow = fig.add_subplot(gs[1, :])
     ax_arrow.axis("off")
     ax_arrow.set_xlim(0, 1); ax_arrow.set_ylim(0, 1)
-    for src_x, tgt_x in [(0.18, 0.30), (0.50, 0.50), (0.82, 0.70)]:
-        _arrow(ax_arrow, src_x, 0.95, tgt_x, 0.10,
+    for col_x in (0.18, 0.50, 0.82):
+        _arrow(ax_arrow, col_x, 0.95, col_x, 0.10,
                color=PALETTE["annotation"], lw=1.2)
 
     # Bottom row: conclusion box (everything inside) + generative prior inset.
