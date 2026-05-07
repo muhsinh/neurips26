@@ -67,7 +67,7 @@ def _label_offset(x: float, y: float, lab: str, fragile_set: set) -> tuple[int, 
     the panel-A annotation block.
     """
     if lab in fragile_set:
-        return (6, -8)  # below-right, away from rect border
+        return (7, -10)  # below-right, away from rect border
     return (5, 5)
 
 
@@ -136,7 +136,7 @@ def panel_A(ax, per_subj, exp2_per_subj, exp3_per_subj, status):
             continue
         dx, dy = _label_offset(x, y, lab, fragile_set)
         ax.annotate(lab, (x, y), xytext=(dx, dy), textcoords="offset points",
-                    fontsize=7.5, fontweight="bold",
+                    fontsize=9, fontweight="bold",
                     color=PALETTE["annotation"], alpha=0.95)
 
     if fragile:
@@ -148,16 +148,18 @@ def panel_A(ax, per_subj, exp2_per_subj, exp3_per_subj, status):
                          fc=PALETTE["stress"], ec=PALETTE["stress"],
                          alpha=0.10, lw=0.8, ls="--", zorder=1)
         ax.add_patch(rect)
-        # Annotate the rectangle directly with the cluster claim.
+        # Cluster claim — anchor to upper-left of axes so it doesn't crowd
+        # panel B's left edge or the colorbar.
         if fragile_names:
             ax.annotate(
-                f"{', '.join(fragile_names)}:\nfragile across all 3 failure modes",
+                f"{', '.join(fragile_names)}:\nfragile across all 3 modes",
                 xy=((x_lo + x_hi) / 2, y_hi),
-                xytext=((x_lo + x_hi) / 2 + 0.15, y_hi + 0.18),
-                fontsize=8.5, fontweight="bold", color=PALETTE["stress"],
-                ha="left", va="bottom",
+                xytext=(0.04, 0.92), textcoords="axes fraction",
+                fontsize=9, fontweight="bold", color=PALETTE["stress"],
+                ha="left", va="top",
                 arrowprops=dict(arrowstyle="-", color=PALETTE["stress"],
-                                lw=0.7, connectionstyle="arc3,rad=-0.15"),
+                                lw=0.6, connectionstyle="arc3,rad=0.25",
+                                alpha=0.7),
             )
 
     ax.set_xlabel("Clean F1 (LOSO, mean over architectures)")
@@ -212,23 +214,24 @@ def render(out_path: Path) -> None:
     exp2_per = _per_subject_dropout_summary(Path("results/exp2_dropout"))
     exp3_per = _per_subject_noise_summary(Path("results/exp3_degradation"))
 
-    fig = plt.figure(figsize=(10.0, 4.4))
-    gs = fig.add_gridspec(1, 2, width_ratios=[1.2, 1.0],
-                          left=0.07, right=0.88, top=0.84, bottom=0.13,
-                          wspace=0.42)
+    # Render at native print size so fonts read at the target paper width.
+    fig = plt.figure(figsize=(7.2, 4.2))
+    gs = fig.add_gridspec(1, 2, width_ratios=[1.15, 1.0],
+                          left=0.09, right=0.91, top=0.86, bottom=0.16,
+                          wspace=0.30)
     axA = fig.add_subplot(gs[0, 0])
     panel_A(axA, per_subj, exp2_per, exp3_per, status1)
-    panel_label(axA, "A", x=-0.10, y=1.02)
+    panel_label(axA, "A", x=-0.12, y=1.03)
 
     axB = fig.add_subplot(gs[0, 1])
     panel_B(axB, exp2, status2)
-    panel_label(axB, "B", x=-0.10, y=1.02)
+    panel_label(axB, "B", x=-0.12, y=1.03)
 
     flag = ""
     if any(s == "placeholder" for s in (status1, status2, status3)):
         flag = "  [PLACEHOLDER DATA]"
     fig.suptitle("Same subjects fail across failure modes; same modalities shortcut" + flag,
-                 fontsize=11.5, fontweight="bold", y=0.95)
+                 fontsize=10.5, fontweight="bold", y=0.97)
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)

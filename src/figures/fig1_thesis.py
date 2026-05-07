@@ -24,10 +24,12 @@ def _box(ax, x, y, w, h, ec, fc="white", lw=1.0, **kwargs):
     return bb
 
 
-def _arrow(ax, x1, y1, x2, y2, color="#444444", lw=1.2):
+def _arrow(ax, x1, y1, x2, y2, color="#444444", lw=1.2,
+           shrinkA=4, shrinkB=4):
     a = FancyArrowPatch((x1, y1), (x2, y2),
                         arrowstyle="-|>", color=color, lw=lw,
-                        mutation_scale=14, shrinkA=4, shrinkB=4)
+                        mutation_scale=14, shrinkA=shrinkA, shrinkB=shrinkB,
+                        zorder=2)
     ax.add_patch(a)
 
 
@@ -86,36 +88,41 @@ def _generative_prior_inset(ax):
     ax.axis("off")
     mods = ["ACC", "BVP", "EDA", "TEMP"]
     ys = [3.4, 2.6, 1.8, 1.0]
-    # left side input modalities
+    # Left-side input modalities. Larger radius (0.45) ensures every
+    # 3-4 char label clears the circle border with margin. zorder explicit
+    # so arrows draw beneath, circle border above, text on top.
     for y, m in zip(ys, mods):
-        c = mpatches.Circle((1.0, y), 0.30, ec=PALETTE["cross_modal_recon"],
-                             fc="white", lw=1.0)
+        c = mpatches.Circle((1.0, y), 0.45, ec=PALETTE["cross_modal_recon"],
+                            fc="white", lw=1.0, zorder=3)
         ax.add_patch(c)
-        ax.text(1.0, y, m, ha="center", va="center", fontsize=6,
-                color=PALETTE["annotation"])
-    # latent — widened from 2.0 to 2.6 to keep label inside on every renderer
+        ax.text(1.0, y, m, ha="center", va="center", fontsize=5.5,
+                color=PALETTE["annotation"], zorder=4)
+    # latent — widened to 2.6 to keep label inside on every renderer
     latent = FancyBboxPatch((3.7, 1.3), 2.6, 1.8,
                             boxstyle="round,pad=0.02,rounding_size=0.05",
                             ec=PALETTE["cross_modal_recon"],
-                            fc="white", lw=1.4)
+                            fc="white", lw=1.4, zorder=3)
     ax.add_patch(latent)
     ax.text(5.0, 2.55, "shared", ha="center", va="center", fontsize=6.5,
-            color=PALETTE["annotation"], fontweight="bold")
+            color=PALETTE["annotation"], fontweight="bold", zorder=4)
     ax.text(5.0, 2.20, "latent", ha="center", va="center", fontsize=6.5,
-            color=PALETTE["annotation"], fontweight="bold")
+            color=PALETTE["annotation"], fontweight="bold", zorder=4)
     ax.text(5.0, 1.85, "prior", ha="center", va="center", fontsize=6.5,
-            color=PALETTE["annotation"], fontweight="bold")
-    # right side reconstructed modalities
+            color=PALETTE["annotation"], fontweight="bold", zorder=4)
+    # Right-side reconstructed modalities (dashed border).
     for y, m in zip(ys, mods):
-        c = mpatches.Circle((8.6, y), 0.30, ec=PALETTE["cross_modal_recon"],
-                             fc="white", lw=1.0, ls="--")
+        c = mpatches.Circle((8.6, y), 0.45, ec=PALETTE["cross_modal_recon"],
+                            fc="white", lw=1.0, ls="--", zorder=3)
         ax.add_patch(c)
-        ax.text(8.6, y, m, ha="center", va="center", fontsize=6,
-                color=PALETTE["annotation"])
+        ax.text(8.6, y, m, ha="center", va="center", fontsize=5.5,
+                color=PALETTE["annotation"], zorder=4)
+    # Arrows: shrinkA/shrinkB extra so they start/end outside the larger circles.
     for y in ys:
-        _arrow(ax, 1.4, y, 3.7, 2.2, color=PALETTE["cross_modal_recon"], lw=0.8)
+        _arrow(ax, 1.0, y, 3.7, 2.2, color=PALETTE["cross_modal_recon"],
+               lw=0.8, shrinkA=12, shrinkB=4)
     for y in ys:
-        _arrow(ax, 6.3, 2.2, 8.2, y, color=PALETTE["cross_modal_recon"], lw=0.8)
+        _arrow(ax, 6.3, 2.2, 8.6, y, color=PALETTE["cross_modal_recon"],
+               lw=0.8, shrinkA=4, shrinkB=12)
     ax.text(5.0, 0.45, "each modality reconstructs the others",
             ha="center", va="center", fontsize=7, style="italic",
             color=PALETTE["annotation"])
@@ -165,12 +172,14 @@ def render(out_path: Path) -> None:
 
         column_axes.append(ax)
 
-    # Convergence arrows row -> central conclusion. Stagger targets so
-    # arrowheads don't pile up at a single point on the conclusion box top.
+    # Convergence arrows row -> central conclusion. Three parallel arrows of
+    # equal length, hitting the conclusion-box top at evenly-spaced anchors —
+    # reads as "three independent failures of the same problem" without
+    # arrowhead pile-up.
     ax_arrow = fig.add_subplot(gs[1, :])
     ax_arrow.axis("off")
     ax_arrow.set_xlim(0, 1); ax_arrow.set_ylim(0, 1)
-    for src_x, tgt_x in [(0.18, 0.42), (0.50, 0.50), (0.82, 0.58)]:
+    for src_x, tgt_x in [(0.18, 0.30), (0.50, 0.50), (0.82, 0.70)]:
         _arrow(ax_arrow, src_x, 0.95, tgt_x, 0.10,
                color=PALETTE["annotation"], lw=1.2)
 

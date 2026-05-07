@@ -36,15 +36,16 @@ def panel_top(ax, per_subj) -> None:
     for i, m in enumerate(MODELS):
         means = [per_subj[m][s]["f1_mean"] for s in SUBJECTS]
         xs = x_centers[i] + (rng.random(len(means)) - 0.5) * 0.30
-        ax.scatter(xs, means, s=22, c=PALETTE[m], alpha=0.85,
+        ax.scatter(xs, means, s=30, c=PALETTE[m], alpha=0.85,
                    edgecolor="white", linewidth=0.5)
         agg_mu = float(np.mean(means))
         ax.hlines(agg_mu, x_centers[i] - 0.30, x_centers[i] + 0.30,
-                  color=PALETTE[m], lw=1.6)
+                  color=PALETTE[m], lw=1.8)
     ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.7, alpha=0.6)
     ax.set_xticks(x_centers)
-    ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], fontsize=8)
-    ax.set_ylabel("Per-subject F1")
+    ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], fontsize=10)
+    ax.tick_params(axis='y', labelsize=9)
+    ax.set_ylabel("Per-subject F1", fontsize=10)
     ax.set_ylim(-0.04, 1.05)
 
 
@@ -64,8 +65,9 @@ def panel_mid(ax, exp2) -> None:
            color=[PALETTE[m] for m in MODELS],
            edgecolor="white", linewidth=0.5)
     ax.set_xticks(x_centers)
-    ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], fontsize=8)
-    ax.set_ylabel("F1 (worst-case dropout)")
+    ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], fontsize=10)
+    ax.tick_params(axis='y', labelsize=9)
+    ax.set_ylabel("F1 (worst-case dropout)", fontsize=10)
     ax.set_ylim(0, 0.9)
     ax.axhline(0.3, color=PALETTE["stress"], linestyle=":", lw=0.7, alpha=0.6)
 
@@ -95,8 +97,9 @@ def panel_bot(ax, exp3, per_subj) -> None:
            edgecolor="white", linewidth=0.5)
     ax.axhline(0, color=PALETTE["baseline"], lw=0.6)
     ax.set_xticks(x_centers)
-    ax.set_xticklabels([MODEL_LABELS[m] for m in plotted_models], fontsize=8)
-    ax.set_ylabel(f"F1 drop, clean to σ={high_sigma:g}")
+    ax.set_xticklabels([MODEL_LABELS[m] for m in plotted_models], fontsize=10)
+    ax.tick_params(axis='y', labelsize=9)
+    ax.set_ylabel(f"F1 drop, clean to σ={high_sigma:g}", fontsize=10)
     ax.set_ylim(-0.05, 0.55)
     ax.set_xlim(-0.7, len(plotted_models) - 0.3)
 
@@ -113,35 +116,33 @@ def render(out_path: Path) -> None:
     exp2, s2 = load_exp2(per_subj)
     exp3, s3 = load_exp3(per_subj)
 
-    fig = plt.figure(figsize=(15.5, 4.6))
+    # Single-row 1×3 layout sized to read at \linewidth (~6.5 in). Aspect
+    # 14:6.5 ≈ 2.15:1 keeps panels close to square at print scale.
+    fig = plt.figure(figsize=(14.0, 6.5))
     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 1],
-                          left=0.06, right=0.97, top=0.78, bottom=0.16,
-                          wspace=0.30)
+                          left=0.07, right=0.97, top=0.82, bottom=0.10,
+                          wspace=0.34)
 
     axT = fig.add_subplot(gs[0])
     panel_top(axT, per_subj)
-    panel_label(axT, "A", x=-0.14, y=1.13)
-    _set_panel_title(axT, "Per-subject collapse persists", fontsize=9.5)
+    panel_label(axT, "A", x=-0.16, y=1.08)
+    _set_panel_title(axT, "Per-subject collapse persists", fontsize=11)
 
     axM = fig.add_subplot(gs[1])
     panel_mid(axM, exp2)
-    panel_label(axM, "B", x=-0.14, y=1.13)
-    _set_panel_title(axM, "Modality shortcut persists across the parameter sweep;\n"
-                            "scale-proxy is worst (within seed-fold variance)",
-                     fontsize=9)
+    panel_label(axM, "B", x=-0.16, y=1.08)
+    _set_panel_title(axM, "Modality shortcut persists", fontsize=11)
 
     axB = fig.add_subplot(gs[2])
     panel_bot(axB, exp3, per_subj)
-    panel_label(axB, "C", x=-0.14, y=1.13)
-    _set_panel_title(axB, "Noise brittleness on the two trained-encoder archs\n"
-                            "(scale-proxy omitted — see caption)",
-                     fontsize=9)
+    panel_label(axB, "C", x=-0.16, y=1.08)
+    _set_panel_title(axB, "Noise brittleness (trained encoders)", fontsize=11)
 
     flag = ""
     if any(s == "placeholder" for s in (s1, s2, s3)):
         flag = "  [PLACEHOLDER DATA]"
     fig.suptitle("Scale alone does not fix any of the three failure modes" + flag,
-                 fontsize=12, fontweight="bold", y=0.97)
+                 fontsize=13, fontweight="bold", y=0.985)
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
