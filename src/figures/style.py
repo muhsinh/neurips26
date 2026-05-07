@@ -4,9 +4,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 PALETTE = {
-    "late_fusion_mlp": "#5B8DEF",
-    "cross_attention": "#E07B91",
-    "scale_proxy": "#7BA05B",
+    "late_fusion_mlp": "#0072B2",
+    "cross_attention": "#D55E00",
+    "scale_proxy": "#009E73",
     "cross_modal_recon": "#C77DFF",
     "annotation": "#333333",
     "baseline": "#888888",
@@ -18,7 +18,7 @@ PALETTE = {
 MODEL_LABELS = {
     "late_fusion_mlp": "Late-fusion MLP",
     "cross_attention": "Cross-attention",
-    "scale_proxy": "Scale proxy",
+    "scale_proxy": "Capacity proxy",
     "cross_modal_recon": "Cross-modal recon",
 }
 
@@ -67,6 +67,7 @@ def despine(ax) -> None:
         ax.spines[s].set_visible(False)
 
 
-def panel_label(ax, label: str, x: float = -0.18, y: float = 1.05) -> None:
-    ax.text(x, y, label, transform=ax.transAxes, fontsize=12,
+def panel_label(ax, label: str, x: float = -0.18, y: float = 1.05,
+                fontsize: float = 12) -> None:
+    ax.text(x, y, label, transform=ax.transAxes, fontsize=fontsize,
             fontweight="bold", va="bottom", ha="left")

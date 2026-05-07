@@ -67,7 +67,7 @@ def _label_offset(x: float, y: float, lab: str, fragile_set: set) -> tuple[int, 
     the panel-A annotation block.
     """
     if lab in fragile_set:
-        return (7, -10)  # below-right, away from rect border
+        return (0, 12)  # above marker, inside the pink fragile rectangle
     return (5, 5)
 
 
@@ -113,8 +113,9 @@ def panel_A(ax, per_subj, exp2_per_subj, exp3_per_subj, status):
     ax.plot([lim_lo, lim_hi], [lim_lo, lim_hi],
             color=PALETTE["baseline"], linestyle="--", lw=0.8, alpha=0.7,
             zorder=1)
-    ax.text(1.01, 0.98, "y = x", transform=ax.transAxes, fontsize=7,
-            color=PALETTE["baseline"], ha="left", va="top")
+    ax.text(0.04, 0.10, "y = x (clean = worst-dropout)",
+            transform=ax.transAxes, fontsize=6.5,
+            color=PALETTE["baseline"], ha="left", va="bottom", style="italic")
 
     xs_a, ys_a = np.array(xs), np.array(ys)
     if len(xs_a) >= 3 and xs_a.std() > 1e-3 and ys_a.std() > 1e-3:
@@ -122,6 +123,14 @@ def panel_A(ax, per_subj, exp2_per_subj, exp3_per_subj, status):
         r_s = float(spearmanr(xs_a, ys_a).correlation)
     else:
         r_p = r_s = float("nan")
+
+    if not (np.isnan(r_p) or np.isnan(r_s)):
+        ax.text(0.98, 0.04,
+                f"Population: ρ={r_s:+.2f}, r={r_p:+.2f}\n(N=15, ceiling-dominated)",
+                transform=ax.transAxes, fontsize=7, ha="right", va="bottom",
+                color=PALETTE["annotation"], fontweight="normal",
+                bbox=dict(facecolor="white", edgecolor=PALETTE["annotation"],
+                          lw=0.5, pad=2, alpha=0.9))
 
     fragile = [(lab, x, y, c) for lab, x, y, c in zip(labels, xs, ys, cs)
                if x < 0.55 and y < 0.20]
@@ -152,7 +161,7 @@ def panel_A(ax, per_subj, exp2_per_subj, exp3_per_subj, status):
         # panel B's left edge or the colorbar.
         if fragile_names:
             ax.annotate(
-                f"{', '.join(fragile_names)}:\nfragile across all 3 modes",
+                f"Fragile cluster (N=2):\n{', '.join(fragile_names)}\nexistence-proof, not population",
                 xy=((x_lo + x_hi) / 2, y_hi),
                 xytext=(0.04, 0.92), textcoords="axes fraction",
                 fontsize=9, fontweight="bold", color=PALETTE["stress"],
@@ -166,9 +175,10 @@ def panel_A(ax, per_subj, exp2_per_subj, exp3_per_subj, status):
     ax.set_ylabel("Worst-dropout F1 (mean over architectures)")
     ax.set_xlim(lim_lo, lim_hi); ax.set_ylim(lim_lo, lim_hi)
 
-    cb = plt.colorbar(sc, ax=ax, fraction=0.045, pad=0.04)
-    cb.set_label("High-noise F1", fontsize=8)
-    cb.ax.tick_params(labelsize=7)
+    cb = plt.colorbar(sc, ax=ax, orientation="horizontal",
+                      fraction=0.06, pad=0.18)
+    cb.set_label("High-noise F1", fontsize=7)
+    cb.ax.tick_params(labelsize=6.5)
 
 
 def panel_B(ax, exp2, status):
@@ -190,20 +200,24 @@ def panel_B(ax, exp2, status):
     ax.legend(loc="upper left", frameon=False, fontsize=7,
               bbox_to_anchor=(1.02, 1.0), borderaxespad=0)
 
-    # Annotation: short downward arrow from a label above the EDA bar group.
+    # Cross-arch Spearman box (strongest stat) — upper-left, above bars.
+    ax.text(0.02, 0.97,
+            "Cross-arch dual-mod\nSpearman ρ ≥ 0.886\n(perm p ≤ 0.016)",
+            transform=ax.transAxes, fontsize=7, ha="left", va="top",
+            bbox=dict(facecolor="white", edgecolor=PALETTE["annotation"],
+                      lw=0.5, pad=2, alpha=0.95))
+
+    # Dominant-modality label under the EDA bar group (small plain text).
     avg_drops = {md: float(np.mean(
         [exp2[m]["all_clean"]["f1_mean"] - exp2[m][f"drop_{md}"]["f1_mean"]
          for m in MODELS])) for md in mods}
     dom_md = max(avg_drops, key=avg_drops.get)
     dom_drop = avg_drops[dom_md]
     dom_idx = mods.index(dom_md)
-    ax.annotate(f"{dom_md}: shortcut\nacross all archs",
-                xy=(dom_idx, dom_drop + 0.02),
-                xytext=(dom_idx, 0.74),
-                fontsize=7.5, color=PALETTE["stress"], fontweight="bold",
-                ha="center", va="top",
-                arrowprops=dict(arrowstyle="->", color=PALETTE["stress"], lw=0.7,
-                                shrinkA=2, shrinkB=2))
+    ax.text(dom_idx, dom_drop + 0.04,
+            f"{dom_md} dominant\n(4/6 dual-mod include {dom_md})",
+            fontsize=6.5, color=PALETTE["stress"], fontweight="bold",
+            ha="center")
 
 
 def render(out_path: Path) -> None:
@@ -217,8 +231,8 @@ def render(out_path: Path) -> None:
     # Render at native print size so fonts read at the target paper width.
     fig = plt.figure(figsize=(7.2, 4.2))
     gs = fig.add_gridspec(1, 2, width_ratios=[1.15, 1.0],
-                          left=0.09, right=0.91, top=0.86, bottom=0.16,
-                          wspace=0.30)
+                          left=0.09, right=0.91, top=0.84, bottom=0.20,
+                          wspace=0.40)
     axA = fig.add_subplot(gs[0, 0])
     panel_A(axA, per_subj, exp2_per, exp3_per, status1)
     panel_label(axA, "A", x=-0.12, y=1.03)
@@ -230,7 +244,7 @@ def render(out_path: Path) -> None:
     flag = ""
     if any(s == "placeholder" for s in (status1, status2, status3)):
         flag = "  [PLACEHOLDER DATA]"
-    fig.suptitle("Same subjects fail across failure modes; same modalities shortcut" + flag,
+    fig.suptitle("Same modalities shortcut (population); same subjects fail (N=2 cluster)" + flag,
                  fontsize=10.5, fontweight="bold", y=0.97)
 
     out_path = Path(out_path)

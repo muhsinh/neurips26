@@ -50,12 +50,12 @@ def panel_A(ax, per_subj, overall, status):
                   color=PALETTE[m], lw=2.0, zorder=4)
 
     ax.axhline(0.0, color=PALETTE["baseline"], linestyle="--", lw=0.8, alpha=0.5)
-    ax.text(-0.55, 0.01, "always-predict-non-stress F1 = 0",
-            fontsize=7, color=PALETTE["baseline"], va="bottom", ha="left")
 
     ax.set_xticks(x_centers)
     ax.set_xticklabels([MODEL_LABELS[m] for m in MODELS], rotation=10, ha="right")
-    ax.set_ylabel("F1 (stress class), per held-out subject")
+    ax.tick_params(axis="x", labelsize=8.5)
+    ax.tick_params(axis="y", labelsize=8)
+    ax.set_ylabel("F1 (stress class), per held-out subject", fontsize=9)
     ax.set_ylim(0.0, 1.05)
     ax.set_xlim(-0.7, len(MODELS) - 0.4)
 
@@ -76,37 +76,41 @@ def panel_A(ax, per_subj, overall, status):
     if target_subj is not None and targets:
         # Anchor callout in the left margin, draw a single short line to the
         # leftmost S17 point. Caption explains the cross-arch persistence.
-        text_xy = (-0.62, 0.18)
+        text_xy = (2.45, 0.42)
         ax.text(text_xy[0], text_xy[1],
-                f"{target_subj} collapses across\n"
-                f"all three architectures\n"
+                f"{target_subj} collapses\n"
+                f"across all 3 archs\n"
                 f"(F1 ≈ {targets[0][1]:.2f})",
-                fontsize=7.5, color=PALETTE["annotation"],
-                ha="left", va="bottom", fontweight="bold")
+                fontsize=7, color=PALETTE["annotation"],
+                ha="right", va="center", fontweight="bold")
         first_tx, first_ty = targets[0]
-        ax.annotate("", xy=(first_tx - 0.05, first_ty + 0.02),
-                    xytext=(text_xy[0] + 0.30, text_xy[1] + 0.02),
-                    arrowprops=dict(arrowstyle="-",
+        ax.annotate("", xy=(first_tx + 0.10, first_ty + 0.02),
+                    xytext=(1.55, 0.30),
+                    arrowprops=dict(arrowstyle="->",
                                     color=PALETTE["annotation"],
-                                    lw=0.5, alpha=0.7,
-                                    connectionstyle="arc3,rad=-0.2"))
+                                    lw=0.6, alpha=0.8,
+                                    connectionstyle="arc3,rad=0.15"))
 
 
 def panel_B(ax, exp2, status):
     width = 0.25
     x = np.arange(len(DROPOUT_CONDS))
     for i, m in enumerate(MODELS):
-        means = [exp2[m][c]["f1_mean"] for c in DROPOUT_CONDS]
-        stds = [exp2[m][c]["f1_std"] for c in DROPOUT_CONDS]
-        ax.bar(x + (i - 1) * width, means, width=width,
-               yerr=stds, capsize=1.5, error_kw={"linewidth": 0.5},
+        means_arr = np.asarray([exp2[m][c]["f1_mean"] for c in DROPOUT_CONDS])
+        stds_arr = np.asarray([exp2[m][c]["f1_std"] for c in DROPOUT_CONDS])
+        yerr_lo = np.minimum(stds_arr, means_arr)
+        yerr_hi = np.minimum(stds_arr, 1.0 - means_arr)
+        ax.bar(x + (i - 1) * width, means_arr, width=width,
+               yerr=[yerr_lo, yerr_hi], capsize=1.5,
+               error_kw={"linewidth": 0.5},
                color=PALETTE[m], edgecolor="white", linewidth=0.5,
                label=MODEL_LABELS[m])
-    short_labels = [c.replace("drop_", "−").replace("all_clean", "full")
+    short_labels = [c.replace("all_clean", "full").replace("drop_", "−").replace("_", "+")
                     for c in DROPOUT_CONDS]
     ax.set_xticks(x)
-    ax.set_xticklabels(short_labels, rotation=45, ha="right", fontsize=7)
-    ax.set_ylabel("F1 (stress)")
+    ax.tick_params(axis="y", labelsize=8)
+    ax.set_xticklabels(short_labels, rotation=55, ha="right", fontsize=6.5)
+    ax.set_ylabel("F1 (stress)", fontsize=9)
     ax.set_ylim(0, 1.18)
     # Legend handled at figure level (single shared legend, horizontal).
 
@@ -133,16 +137,26 @@ def panel_C(ax, exp3, status):
     for m in MODELS:
         means = np.array([exp3[m]["gaussian"][str(s)]["f1_mean"] for s in sigmas])
         stds = np.array([exp3[m]["gaussian"][str(s)]["f1_std"] for s in sigmas])
-        ax.plot(sigmas, means, "-o", color=PALETTE[m], lw=1.5, ms=5,
+        ax.plot(sigmas, means, "-o", color=PALETTE[m], lw=2.0, ms=5,
                 mec="white", mew=0.6, label=MODEL_LABELS[m])
         ax.fill_between(sigmas, np.clip(means - stds, 0, 1),
                         np.clip(means + stds, 0, 1),
-                        color=PALETTE[m], alpha=0.15)
-    ax.set_xlabel("Gaussian noise σ (× input std)")
-    ax.set_ylabel("F1 (stress)")
+                        color=PALETTE[m], alpha=0.10)
+    for m in MODELS:
+        high = exp3[m]["gaussian"][str(max(NOISE_SIGMAS))]["f1_mean"]
+        low = exp3[m]["gaussian"][str(min(NOISE_SIGMAS))]["f1_mean"]
+        delta = (low - high) * 100
+        ax.annotate(f"−{delta:.0f}pp",
+                    xy=(max(NOISE_SIGMAS), high),
+                    xytext=(5, 0), textcoords="offset points",
+                    fontsize=7, color=PALETTE[m], va="center")
+    ax.set_xlabel("Gaussian noise σ (× input std)", fontsize=9)
+    ax.set_ylabel("F1 (stress)", fontsize=9)
     ax.set_xscale("log")
     ax.set_xticks(sigmas)
-    ax.set_xticklabels([f"{s:g}" for s in sigmas])
+    ax.set_xticklabels(["0.1", "0.5", "1.0", "2.0"])
+    ax.tick_params(axis="x", labelsize=8.5)
+    ax.tick_params(axis="y", labelsize=8)
     ax.set_ylim(0, 1.05)
 
 
@@ -152,10 +166,11 @@ def render(out_path: Path) -> None:
     exp2, status_e2 = load_exp2(per_subj)
     exp3, status_e3 = load_exp3(per_subj)
 
-    fig = plt.figure(figsize=(16.5, 5.4))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.4, 1.0],
-                          left=0.05, right=0.92, top=0.88, bottom=0.20,
-                          wspace=0.36)
+    fig = plt.figure(figsize=(7.0, 7.0))
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.0, 1.0],
+                          height_ratios=[1.0, 1.0],
+                          left=0.10, right=0.96, top=0.84, bottom=0.09,
+                          wspace=0.30, hspace=0.55)
 
     axA = fig.add_subplot(gs[0, 0])
     panel_A(axA, per_subj, overall, status_e1)
@@ -165,20 +180,21 @@ def render(out_path: Path) -> None:
     panel_B(axB, exp2, status_e2)
     panel_label(axB, "B", x=-0.10, y=1.02)
 
-    axC = fig.add_subplot(gs[0, 2])
+    axC = fig.add_subplot(gs[1, :])
     panel_C(axC, exp3, status_e3)
-    panel_label(axC, "C", x=-0.18, y=1.02)
+    panel_label(axC, "C", x=-0.10, y=1.02)
 
-    # Single shared legend at top centre (uses Panel B handles which has all 3 archs).
+    # Shared legend below suptitle, above panel A/B.
     handles, labels_ = axB.get_legend_handles_labels()
     fig.legend(handles, labels_, loc="upper center", ncol=len(MODELS),
-               frameon=False, fontsize=9, bbox_to_anchor=(0.5, 0.98))
+               frameon=False, fontsize=8, bbox_to_anchor=(0.5, 0.91),
+               title="architectures (applies to A–C)", title_fontsize=7)
 
     flag = ""
     if any(s == "placeholder" for s in (status_e1, status_e2, status_e3)):
         flag = "  [PLACEHOLDER DATA]"
     fig.suptitle("Three failure modes of multi-sensor fusion on WESAD" + flag,
-                 fontsize=12, fontweight="bold", y=0.99)
+                 fontsize=11, fontweight="bold", y=0.97)
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
