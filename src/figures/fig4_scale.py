@@ -113,35 +113,35 @@ def render(out_path: Path) -> None:
     exp2, s2 = load_exp2(per_subj)
     exp3, s3 = load_exp3(per_subj)
 
-    fig = plt.figure(figsize=(5.0, 8.0))
-    gs = fig.add_gridspec(3, 1, height_ratios=[1, 1, 1],
-                          left=0.18, right=0.96, top=0.92, bottom=0.06,
-                          hspace=0.85)
+    fig = plt.figure(figsize=(15.5, 4.6))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 1],
+                          left=0.06, right=0.97, top=0.78, bottom=0.16,
+                          wspace=0.30)
 
     axT = fig.add_subplot(gs[0])
     panel_top(axT, per_subj)
-    panel_label(axT, "A", x=-0.16, y=1.10)
-    _set_panel_title(axT, "Per-subject collapse persists")
+    panel_label(axT, "A", x=-0.14, y=1.13)
+    _set_panel_title(axT, "Per-subject collapse persists", fontsize=9.5)
 
     axM = fig.add_subplot(gs[1])
     panel_mid(axM, exp2)
-    panel_label(axM, "B", x=-0.16, y=1.10)
+    panel_label(axM, "B", x=-0.14, y=1.13)
     _set_panel_title(axM, "Modality shortcut persists across the parameter sweep;\n"
                             "scale-proxy is worst (within seed-fold variance)",
-                     fontsize=8.5)
+                     fontsize=9)
 
     axB = fig.add_subplot(gs[2])
     panel_bot(axB, exp3, per_subj)
-    panel_label(axB, "C", x=-0.16, y=1.10)
+    panel_label(axB, "C", x=-0.14, y=1.13)
     _set_panel_title(axB, "Noise brittleness on the two trained-encoder archs\n"
                             "(scale-proxy omitted — see caption)",
-                     fontsize=8.5)
+                     fontsize=9)
 
     flag = ""
     if any(s == "placeholder" for s in (s1, s2, s3)):
         flag = "  [PLACEHOLDER DATA]"
     fig.suptitle("Scale alone does not fix any of the three failure modes" + flag,
-                 fontsize=11, fontweight="bold", y=0.985)
+                 fontsize=12, fontweight="bold", y=0.97)
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)

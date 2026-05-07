@@ -93,15 +93,17 @@ def _generative_prior_inset(ax):
         ax.add_patch(c)
         ax.text(1.0, y, m, ha="center", va="center", fontsize=6,
                 color=PALETTE["annotation"])
-    # latent
-    latent = FancyBboxPatch((4.0, 1.3), 2.0, 1.8,
+    # latent — widened from 2.0 to 2.6 to keep label inside on every renderer
+    latent = FancyBboxPatch((3.7, 1.3), 2.6, 1.8,
                             boxstyle="round,pad=0.02,rounding_size=0.05",
                             ec=PALETTE["cross_modal_recon"],
                             fc="white", lw=1.4)
     ax.add_patch(latent)
-    ax.text(5.0, 2.5, "shared latent", ha="center", va="center", fontsize=7,
+    ax.text(5.0, 2.55, "shared", ha="center", va="center", fontsize=6.5,
             color=PALETTE["annotation"], fontweight="bold")
-    ax.text(5.0, 1.95, "prior", ha="center", va="center", fontsize=7,
+    ax.text(5.0, 2.20, "latent", ha="center", va="center", fontsize=6.5,
+            color=PALETTE["annotation"], fontweight="bold")
+    ax.text(5.0, 1.85, "prior", ha="center", va="center", fontsize=6.5,
             color=PALETTE["annotation"], fontweight="bold")
     # right side reconstructed modalities
     for y, m in zip(ys, mods):
@@ -111,9 +113,9 @@ def _generative_prior_inset(ax):
         ax.text(8.6, y, m, ha="center", va="center", fontsize=6,
                 color=PALETTE["annotation"])
     for y in ys:
-        _arrow(ax, 1.4, y, 4.0, 2.2, color=PALETTE["cross_modal_recon"], lw=0.8)
+        _arrow(ax, 1.4, y, 3.7, 2.2, color=PALETTE["cross_modal_recon"], lw=0.8)
     for y in ys:
-        _arrow(ax, 6.0, 2.2, 8.2, y, color=PALETTE["cross_modal_recon"], lw=0.8)
+        _arrow(ax, 6.3, 2.2, 8.2, y, color=PALETTE["cross_modal_recon"], lw=0.8)
     ax.text(5.0, 0.45, "each modality reconstructs the others",
             ha="center", va="center", fontsize=7, style="italic",
             color=PALETTE["annotation"])

@@ -108,9 +108,7 @@ def panel_B(ax, exp2, status):
     ax.set_xticklabels(short_labels, rotation=45, ha="right", fontsize=7)
     ax.set_ylabel("F1 (stress)")
     ax.set_ylim(0, 1.18)
-    # Legend outside on the right to free top margin for the annotation.
-    ax.legend(loc="upper left", frameon=False, fontsize=7,
-              bbox_to_anchor=(1.02, 1.0), borderaxespad=0)
+    # Legend handled at figure level (single shared legend, horizontal).
 
     # Annotate worst-drop pair: text in upper-left empty zone, short arrow.
     cmean_clean = np.mean([exp2[m]["all_clean"]["f1_mean"] for m in MODELS])
@@ -146,8 +144,6 @@ def panel_C(ax, exp3, status):
     ax.set_xticks(sigmas)
     ax.set_xticklabels([f"{s:g}" for s in sigmas])
     ax.set_ylim(0, 1.05)
-    ax.legend(loc="lower left", frameon=False, fontsize=7,
-              bbox_to_anchor=(0.0, -0.05))
 
 
 def render(out_path: Path) -> None:
@@ -156,28 +152,33 @@ def render(out_path: Path) -> None:
     exp2, status_e2 = load_exp2(per_subj)
     exp3, status_e3 = load_exp3(per_subj)
 
-    fig = plt.figure(figsize=(11.0, 4.8))
-    gs = fig.add_gridspec(2, 2, width_ratios=[1.7, 1.0], height_ratios=[1, 1],
-                          left=0.06, right=0.85, top=0.88, bottom=0.16,
-                          hspace=0.65, wspace=0.34)
+    fig = plt.figure(figsize=(16.5, 5.4))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.4, 1.0],
+                          left=0.05, right=0.92, top=0.88, bottom=0.20,
+                          wspace=0.36)
 
-    axA = fig.add_subplot(gs[:, 0])
+    axA = fig.add_subplot(gs[0, 0])
     panel_A(axA, per_subj, overall, status_e1)
-    panel_label(axA, "A", x=-0.10, y=1.02)
+    panel_label(axA, "A", x=-0.18, y=1.02)
 
     axB = fig.add_subplot(gs[0, 1])
     panel_B(axB, exp2, status_e2)
-    panel_label(axB, "B", x=-0.18, y=1.04)
+    panel_label(axB, "B", x=-0.10, y=1.02)
 
-    axC = fig.add_subplot(gs[1, 1])
+    axC = fig.add_subplot(gs[0, 2])
     panel_C(axC, exp3, status_e3)
-    panel_label(axC, "C", x=-0.18, y=1.04)
+    panel_label(axC, "C", x=-0.18, y=1.02)
+
+    # Single shared legend at top centre (uses Panel B handles which has all 3 archs).
+    handles, labels_ = axB.get_legend_handles_labels()
+    fig.legend(handles, labels_, loc="upper center", ncol=len(MODELS),
+               frameon=False, fontsize=9, bbox_to_anchor=(0.5, 0.98))
 
     flag = ""
     if any(s == "placeholder" for s in (status_e1, status_e2, status_e3)):
         flag = "  [PLACEHOLDER DATA]"
     fig.suptitle("Three failure modes of multi-sensor fusion on WESAD" + flag,
-                 fontsize=12, fontweight="bold", y=0.97)
+                 fontsize=12, fontweight="bold", y=0.99)
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
